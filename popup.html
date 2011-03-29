@@ -1,0 +1,133 @@
+<head>
+<style>
+* {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+TABLE {
+	width: 400px;
+}
+#links {
+	padding: 3px 0;
+	margin: 3px 0 0 0;
+	border: solid 1px #b6c7da;
+	background: url(img/bg_links.png) bottom left repeat-x;
+}
+#links A {
+	color: #000;
+	text-decoration: none;
+	padding: 4px 11px;
+}
+#links A.menu_actif {
+	background: url(img/a_on.png) center left repeat-x;
+	border: solid 1px #b6c7da;
+	border-radius: 3px;
+	padding: 3px 10px;
+}
+.td_dl_termine {
+	padding: 4px 0;
+	border-bottom: solid 1px #CCC;
+}
+.table_dl_encours {
+	float: right;
+}
+.td_dl_bas {
+	padding: 0 0 4px 0;
+	border-bottom: solid 1px #CCC;
+}
+.dl_fond {
+	height: 11px;
+	border: solid 1px #b2b2b2;
+	background: url(img/bg_progress.png) center left repeat-x;
+	overflow: hidden;
+	border-radius: 2px;
+}
+.dl_bar {
+	height: 11px;
+	background: url(img/progress_bar.png) center left repeat-x;
+}
+</style>
+<script>
+
+
+function show(status)
+{
+	localStorage["filter"] = status;
+	buildInfo();
+}
+function onload()
+{
+	buildInfo();
+   	setInterval(buildInfo,3000);
+}
+
+function buildInfo(){
+	
+  var xh = new XMLHttpRequest();
+  var params = "method=download.list";
+  xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
+  xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
+  xh.send(params);
+   if (xh.readyState == 4) 
+        {
+           if (xh.status == 200) 
+           {
+           		var res = eval("(" + xh.responseText + ")");
+           		var size = 0;
+           		var active = "";
+           		for (i in res.result)
+  				{
+  					var file = res.result[i];
+  					if (localStorage["filter"].indexOf(file.status)>=0)
+  					{
+  						if (file.name.length > size) size = file.name.length;
+
+  						var finished = file.transferred / file.size * 100;
+  						finished = Math.round(finished);
+  						if (localStorage["filter"] != "done,seeding") 
+  						{
+							document.getElementById("encours").className = "menu_actif";
+							active += "<tr>";
+								active += "<td>" + file.name + ' </td>'
+								active += '<td align="right" width="50"> ' + finished + "%</td>";
+								active += '<td align="right" width="150"> ' + Math.round(file.rx_rate/1000)/1000 + "Mo/s</td>";
+							active += '</tr>';
+							active += '<tr>';
+  								active += "<td colspan='3' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div></td>";
+							active += '</tr>';
+  						}
+						else {
+							document.getElementById("termines").className = "menu_actif";
+							active += "<tr>";
+								active += "<td class='td_dl_termine'>" + file.name + ' </td>'
+  							active += "</tr>";
+						}
+  						console.log(file.name + " : " + finished + "%");
+  					}
+				}
+				active = '<center><table width="'+ size*10  +'">'+active;
+				active += "</table></center>";
+				
+				console.log(active);
+				var select = document.getElementById("bots");
+				select.innerHTML=active;
+				
+           		}
+        }
+    
+    }
+
+</script>
+</style>
+</head>
+<body onLoad="onload()">
+<div id="links">
+<table width="400"><tr><td>
+<a href="" onclick='show("running,paused");menu("encours");' id='encours'>En cours</a>
+<a href="" onclick='show("done,seeding");menu("termines");' id='termines'>T&eacute;l&eacute;charg&eacute;s</a>
+<a href="http://mafreebox.freebox.fr/download.php" target="_blank">Seedbox</a> 
+</td></tr></table>
+</div>
+<div id="bots">.</div>
+</body>
