@@ -4,7 +4,7 @@
   "description": "Démarre les téléchargements sur le freebox revolution server",
   "version": "0.2.2",
   "permissions": ["contextMenus","notifications",
-  			"http://mafreebox.freebox.fr/","http://*/","file:///*/"],
+  			"http://mafreebox.freebox.fr/"],
   "browser_action": {
     "default_title": "",
     "default_icon": "img/down.png",
