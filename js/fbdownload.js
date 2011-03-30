@@ -27,7 +27,7 @@ function translateErrorCode(code,def)
 
 function login( pass ){
   
-  var params = "login=freebox&passwd=" + encodeURIComponent(pass);
+  var params = "login=freebox&passwd=" + pass;
   var xh = new XMLHttpRequest();
   console.log("POST");
   xh.open("POST", "http://mafreebox.freebox.fr/login.php", false);
@@ -79,10 +79,9 @@ function onClick(info, tab) {
 }
 
 function download(url){
-	downloadTorrent(url);
-	return
+
   	var pass = localStorage["freebox_password"];
-	console.log(url);
+
   	// check if we are correctly log we need a cookie to send download request
   	res = login(pass);
   	if (res.result == false){
@@ -90,7 +89,6 @@ function download(url){
   		return;
   	}	
   
-  	
   	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=" + getMethod(url);
     var xh = new XMLHttpRequest();
   	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
@@ -104,79 +102,6 @@ function download(url){
 			checkFinished();
         }
     }
-}
-
-function downloadTorrent(url)
-{
-	console.log("downloading " + url);
-	var xh = new XMLHttpRequest();
-  	xh.open("get", url, false);  
-  	//xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
-  	xh.overrideMimeType('text/plain; charset=x-user-defined');
-
- 	 xh.send(null);
-
-  	if (xh.status != 200) return '';
-	var torrentFile = xh.responseText;
-  	console.log( xh);
-  	uploadFile("http://mafreebox.freebox.fr/download.cgi",torrentFile )
-  	
-  	
-  	
-}
-
-function uploadFile( url, fileData ) {
-  var boundaryString = "AaBbCcX30";
-  var boundary = "--"+boundaryString;
-
-  var postContent = boundary+"\r\n"+
-          
-          "Content-Disposition: form-data; name=\"url\"\r\n"+
-          "\r\n"+
-          "\r\n"+
-          boundary+"\r\n"+
-          "Content-Disposition: form-data; name=\"user\"\r\n"+
-          "\r\n"+
-          "freebox\r\n"+
-          boundary+"\r\n"+
-          "Content-Disposition: form-data; name=\"method\"\r\n"+
-          "\r\n"+
-          "download.torrent_add\r\n"+
-          boundary+"\r\n"+
-          "Content-Disposition: form-data; name=\"ajax_iform\"\r\n"+
-          "\r\n"+
-          "1\r\n"+
-          boundary+"\r\n"+
-          "Content-Disposition: form-data; name=\"data\"; filename=\"The.Kings.Speech.2010.VOSTFR.BDRiP.XviD-NIKOo.avi[www.torrent411.com].torrent\"\r\n"+
-          "Content-Type: text/plain\r\n"+
-          "\r\n"+
-          "%FILECONTENT%\r\n"+
-          boundary+"\r\n";
-  postContent = postContent.replace("%FILECONTENT%", fileData);
-  
-  
-  console.log(fileData);
-  
-  var formData = new FormData();
-	formData.append("url", "");
-	formData.append("user", "freebox");
-	formData.append("method", "download.torrent_add");
-	formData.append("data", fileData);
-	
-
-  var req = new XMLHttpRequest();
-  req.open("POST", url, true); 
-  req.setRequestHeader("Content-Type", "multipart/form-data; boundary=" + boundaryString);
-  req.setRequestHeader("X-Requested-With","XMLHttpRequest");
-  req.onreadystatechange = function() {
-    if (req.readyState == 4) {
-      if (req.status == 200) {
-        console.log( req.responseText );
-      }
-    }
-  };
-  req.send(postContent);
 }
 
   
