@@ -27,7 +27,7 @@ function translateErrorCode(code,def)
 
 function login( pass ){
   
-  var params = "login=freebox&passwd=" + pass;
+  var params = "login=freebox&passwd=" + encodeURIComponent(pass);
   var xh = new XMLHttpRequest();
   console.log("POST");
   xh.open("POST", "http://mafreebox.freebox.fr/login.php", false);
