@@ -47,6 +47,7 @@ TABLE {
 	background: url(img/progress_bar.png) center left repeat-x;
 }
 </style>
+<script src="js/fbdownload.js"></script>
 <script>
 
 
@@ -57,66 +58,114 @@ function show(status)
 }
 function onload()
 {
+	login(localStorage["freebox_password"]);
 	buildInfo();
    	setInterval(buildInfo,3000);
 }
 
+function sendControl(action, id, type) {
+	var cmd = '{"jsonrpc":"2.0","method":"download.'+ action +'","params":["'+ type +'",' + id + ']}';
+	console.log(cmd);
+	var request = new XMLHttpRequest();
+	request.open("POST", "http://mafreebox.freebox.fr/download.cgi" , false);
+	request.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+	request.setRequestHeader("X-Requested-With","XMLHttpRequest");
+	request.send(cmd);		
+    if (request.readyState == 4 && request.status == 200) {
+    	console.log( request.responseText );
+	}
+	buildInfo();
+}
+
+function buildControl(file){
+	var cmd = "";
+	var img = "";
+	if (file.status == "running"){
+		cmd="stop";
+		img="img/stop.png";
+	}
+	else if (file.status == "paused"){
+		cmd="start";
+		img="img/start.png";
+	}
+	else{
+		cmd="remove";
+		img="img/remove.png";
+	}
+	
+	var html = '<a href="" onclick=\'sendControl("'+ cmd + '", ' + file.id + ', "' +file.type +'");\'>';
+	html +=  "<img src='" + img + "' /></a>";
+	return html;
+}
+
 function buildInfo(){
 	
-  var xh = new XMLHttpRequest();
-  var params = "method=download.list";
-  xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
-  xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
-  xh.send(params);
-   if (xh.readyState == 4) 
-        {
-           if (xh.status == 200) 
-           {
-           		var res = eval("(" + xh.responseText + ")");
-           		var size = 0;
-           		var active = "";
-           		for (i in res.result)
-  				{
-  					var file = res.result[i];
-  					if (localStorage["filter"].indexOf(file.status)>=0)
-  					{
-  						if (file.name.length > size) size = file.name.length;
-
-  						var finished = file.transferred / file.size * 100;
-  						finished = Math.round(finished);
-  						if (localStorage["filter"] != "done,seeding") 
-  						{
-							document.getElementById("encours").className = "menu_actif";
-							active += "<tr>";
-								active += "<td>" + file.name + ' </td>'
-								active += '<td align="right" width="50"> ' + finished + "%</td>";
-								active += '<td align="right" width="150"> ' + Math.round(file.rx_rate/1000)/1000 + "Mo/s</td>";
-							active += '</tr>';
-							active += '<tr>';
-  								active += "<td colspan='3' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div></td>";
-							active += '</tr>';
-  						}
-						else {
-							document.getElementById("termines").className = "menu_actif";
-							active += "<tr>";
-								active += "<td class='td_dl_termine'>" + file.name + ' </td>'
-  							active += "</tr>";
-						}
-  						console.log(file.name + " : " + finished + "%");
-  					}
+	var xh = new XMLHttpRequest();
+	var params = "method=download.list";
+	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
+	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
+	xh.send(params);
+	if (xh.readyState == 4 && xh.status == 200) {
+		var res = eval("(" + xh.responseText + ")");
+		var size = 0;
+		var activeCount = 0;
+		var downloadCount = 0;
+		var active = "";
+		for (i in res.result){
+			var file = res.result[i];
+			
+			if (localStorage["filter"].indexOf(file.status)>=0){
+			
+				if (file.name.length > size) size = file.name.length;
+				var finished = file.transferred / file.size * 100;
+				finished = Math.round(finished);
+				
+				if (localStorage["filter"] != "done,seeding") {
+				
+					document.getElementById("encours").className = "menu_actif";
+					if ( file.rx_rate > 1000000 ){
+						speed = Math.round(100 * file.rx_rate / 1000000) / 100 + " Mo/s";
+					}else{
+						speed = Math.round(file.rx_rate / 1000) + " Ko/s";
+					}
+					active += "<tr>";
+						active += "<td>" + file.name + ' </td>'
+						active += '<td align="right" width="50"> ' + finished + "%</td>";
+						active += '<td align="right" width="75"> ' + speed + "</td>";
+						active += '<td align="right" width="20">' + buildControl(file) + '</td>';
+					active += '</tr>';
+					active += '<tr>';
+						active += "<td colspan='4' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div></td>";
+					active += '</tr>';
 				}
-				active = '<center><table width="'+ size*10  +'">'+active;
-				active += "</table></center>";
+				else {
 				
-				console.log(active);
-				var select = document.getElementById("bots");
-				select.innerHTML=active;
-				
-           		}
-        }
-    
-    }
+					document.getElementById("termines").className = "menu_actif";
+					active += "<tr>";
+						active += "<td class='td_dl_termine'>" + file.name + ' </td>'
+						active += '<td align="right" width="20">' + buildControl(file) + '</td>';
+					active += "</tr>";
+				}
+			}
+			if ("done,seeding".indexOf(file.status)>=0)  
+					downloadCount +=1;
+			else
+					activeCount += 1;
+			
+		}
+		active = '<center><table width="100%">'+active;
+		active += "</table></center>";
+		var encours = document.getElementById("encours");
+		encours.innerHTML = "En cours(" + activeCount +")";
+		
+		var termines = document.getElementById("termines");
+		termines.innerHTML = "T&eacute;l&eacute;charg&eacute;s(" + downloadCount +")";
+		
+		var select = document.getElementById("bots");
+		select.innerHTML=active;		
+	}
+}
 
 </script>
 </style>
