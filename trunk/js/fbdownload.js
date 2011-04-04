@@ -29,7 +29,6 @@ function login( pass ){
   
   var params = "login=freebox&passwd=" + encodeURIComponent(pass);
   var xh = new XMLHttpRequest();
-  console.log("POST");
   xh.open("POST", "http://mafreebox.freebox.fr/login.php", false);
   xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
@@ -59,13 +58,19 @@ function login( pass ){
 
 function getMethod(url){
 
-  if( url.substr(0,7) == "magnet:")
+  if( isTorrent(url))
   	return  "download.torrent_add";
-  if( url.substr(-7) === "torrent" ) 
-     return  "download.torrent_add";
   else
      return  "download.http_add";
-       
+}
+
+function isTorrent(url){
+  	if( url.substr(-7) === "torrent" ) 
+    	return  true;
+    if (url.indexOf("torrent")>=0)
+    	return  true;
+  	else
+     	return  false;
 }
 
 function getFilename(url)
@@ -87,9 +92,20 @@ function download(url){
   	if (res.result == false){
   		alert(res.error);
   		return;
-  	}	
-  
-  	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=" + getMethod(url);
+  	}
+  	
+  	if( url.substr(0,7) == "magnet:")
+  		downloadMagnet(url);
+  	else{
+		if (isTorrent(url))
+			downloadTorrent(url);
+		else 	
+			downloadHTTP(url);
+		}
+}
+
+function downloadMagnet(url){
+	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.torrent_add";
     var xh = new XMLHttpRequest();
   	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
   	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -103,5 +119,89 @@ function download(url){
         }
     }
 }
+
+function downloadHTTP(url){
+	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.http_add";
+    var xh = new XMLHttpRequest();
+  	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
+  	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
+  	xh.send(params);
+	if (xh.readyState == 4){
+    	if (xh.status == 200){
+           	var filename = getFilename(url);
+			notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', filename, 7000);
+			checkFinished();
+        }
+    }
+}
+
+
+function downloadTorrent (url) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', url, true);
+	xhr.overrideMimeType('text/plain; charset=x-user-defined');
+	xhr.responseType = "arraybuffer";
+	
+	xhr.onload = function(ev) {
+	    var blob = new BlobBuilder();
+	    blob.append(xhr.response);
+	    
+		encodeTorrent(blob.getBlob(), function (data, torrent) {
+					uploadTorrent(data, torrent);
+					})
+	};
+	
+	xhr.send(null);
+}
+
+function parseTorrent (file, callback) {
+//function that gonna parse torrent in order to build a info object
+	infoReader = new FileReader();
+	infoReader.onload = function (ev) {
+		var delo = new Worker('js/bencode.js');
+		delo.onmessage = function(event) {  
+			callback(event.data);
+		}; 
+		delo.postMessage(infoReader.result); 
+	}
+	infoReader.readAsBinaryString(file);
+}
+
+function encodeTorrent (file, callback) {
+	//check if everything is ok we have a torrent,
+	parseTorrent(file, function (torrent) {
+		if (torrent != null) {
+			//encode data that gonna be transmited
+			var reader = new FileReader();
+			reader.onload = function (ev) {
+				var data = reader.result.replace("data:application/x-bittorrent;base64,", "").replace("data:base64,", "");
+				callback(data, torrent);
+			}
+			reader.readAsDataURL(file);
+		}else{
+			alert("This file isn't torrent!");
+		}
+	})
+}
+
+function uploadTorrent (data, torrent) {
+	//send everything
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', "http://mafreebox.freebox.fr:9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
+	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
+	xhr.send('{ "arguments": { "metainfo": "' + data + '" }, "method": "torrent-add" }');
+	xhr.onreadystatechange = function () {
+	    if (xhr.readyState === 4) {
+	    	if (xhr.status == 200){
+				notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', torrent.info.name, 7000);
+				checkFinished();
+        	}  
+	    }
+	};
+
+}
+
+
 
   
