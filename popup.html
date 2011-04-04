@@ -92,9 +92,14 @@ function buildControl(file){
 		cmd="remove";
 		img="img/remove.png";
 	}
+	var html =''
+	if ("done,seeding".indexOf(file.status)<0){
+		html += '<a href="" onclick=\'sendControl("'+ cmd + '", ' + file.id + ', "' +file.type +'");\'>';
+		html +=  "<img src='" + img + "' /></a>";
+	}
 	
-	var html = '<a href="" onclick=\'sendControl("'+ cmd + '", ' + file.id + ', "' +file.type +'");\'>';
-	html +=  "<img src='" + img + "' /></a>";
+	html += '<a href="" onclick=\'sendControl("remove", ' + file.id + ', "' +file.type +'");\'>';
+	html +=  "<img src='img/remove.png' /></a>";
 	return html;
 }
 
@@ -133,7 +138,7 @@ function buildInfo(){
 						active += "<td>" + file.name + ' </td>'
 						active += '<td align="right" width="50"> ' + finished + "%</td>";
 						active += '<td align="right" width="75"> ' + speed + "</td>";
-						active += '<td align="right" width="20">' + buildControl(file) + '</td>';
+						active += '<td align="right" width="35">' + buildControl(file) + '</td>';
 					active += '</tr>';
 					active += '<tr>';
 						active += "<td colspan='4' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div></td>";
