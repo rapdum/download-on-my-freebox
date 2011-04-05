@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Raphaël Dumontier <rdumontier@bgmail.com>, (C) 2010, 2011
+ * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
 
 function translateErrorCode(code,def)
@@ -64,13 +64,23 @@ function getMethod(url){
      return  "download.http_add";
 }
 
-function isTorrent(url){
-  	if( url.substr(-7) === "torrent" ) 
-    	return  true;
-    if (url.indexOf("torrent")>=0)
-    	return  true;
-  	else
-     	return  false;
+function dispatchTorrent(url, callbackTorrent, callbackHttp){
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", url, true);
+	xhr.overrideMimeType('text/plain; charset=x-user-defined');
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 3) {
+			if (xhr.getResponseHeader("Content-Type") == "application/x-bittorrent") {
+				xhr.abort();
+				callbackTorrent(url);
+				}
+			else{
+				xhr.abort();
+				callbackHttp(url);	
+			}
+		}
+	}
+	xhr.send(null);
 }
 
 function getFilename(url)
@@ -96,12 +106,9 @@ function download(url){
   	
   	if( url.substr(0,7) == "magnet:")
   		downloadMagnet(url);
-  	else{
-		if (isTorrent(url))
-			downloadTorrent(url);
-		else 	
-			downloadHTTP(url);
-		}
+  	else
+		dispatchTorrent(url, downloadTorrent, downloadHTTP);
+		
 }
 
 function downloadMagnet(url){
