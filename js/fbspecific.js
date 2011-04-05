@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Raphaël Dumontier <rdumontier@bgmail.com>, (C) 2010, 2011
+ * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
 
 function notif(img,title,txt, timeout)
