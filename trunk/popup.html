@@ -7,6 +7,18 @@
 TABLE {
 	width: 400px;
 }
+.titre_dl {
+	cursor: help;
+}
+H3 {
+	width: 150px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	outline: 0 !important;
+	font-weight: normal;
+	padding-top: 11px;
+}
 #links {
 	padding: 3px 0;
 	margin: 3px 0 0 0;
@@ -49,6 +61,23 @@ TABLE {
 </style>
 <script src="js/fbdownload.js"></script>
 <script>
+
+function secondsToTime(sec0)
+{
+	var sec =sec0;
+	var hr = Math.floor(sec / 3600);
+	var min = Math.floor((sec - (hr * 3600))/60);
+	sec -= ((hr * 3600) + (min * 60));
+	sec += ''; 
+	min += '';
+	hr = (hr)?hr+'h':'';
+	if(sec0 < 60) {
+		return sec0+"s";
+	}
+	else {
+		return hr + min + 'mn';
+	}
+}
 
 
 function show(status)
@@ -126,6 +155,15 @@ function buildInfo(){
 				var finished = file.transferred / file.size * 100;
 				finished = Math.round(finished);
 				
+				if(file.rx_rate > 0) {
+					var reste_a_dl = file.size - file.transferred;
+					var temps = Math.round(reste_a_dl / file.rx_rate);
+					temps = secondsToTime(temps);
+				}
+				else {
+					temps = "";
+				}
+				
 				if (localStorage["filter"] != "done,seeding") {
 				
 					document.getElementById("encours").className = "menu_actif";
@@ -135,13 +173,14 @@ function buildInfo(){
 						speed = Math.round(file.rx_rate / 1000) + " Ko/s";
 					}
 					active += "<tr>";
-						active += "<td>" + file.name + ' </td>'
+						active += "<td><a class='titre_dl' title=\"" + file.name + "\"><h3>" + file.name + "</h3></a> </td>";
 						active += '<td align="right" width="50"> ' + finished + "%</td>";
 						active += '<td align="right" width="75"> ' + speed + "</td>";
+						active += '<td align="right" width="75"> ' + temps + "</td>";
 						active += '<td align="right" width="35">' + buildControl(file) + '</td>';
 					active += '</tr>';
 					active += '<tr>';
-						active += "<td colspan='4' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div></td>";
+						active += "<td colspan='5' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div></td>";
 					active += '</tr>';
 				}
 				else {

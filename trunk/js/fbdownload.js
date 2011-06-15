@@ -38,9 +38,9 @@ function login( pass ){
   
   try{
   	xh.send(params);
-    if (xh.readyState == 4) /* 4 : état "complete" */
+    if (xh.readyState == 4) 
     {
-       if (xh.status == 200) /* 200 : code HTTP pour OK */
+       if (xh.status == 200)
        {      
        		var jsondata=eval("("+xh.responseText+")");
        		jsondata.error = translateErrorCode(jsondata.errcode);
@@ -70,6 +70,7 @@ function dispatchTorrent(url, callbackTorrent, callbackHttp){
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 3) {
+			console.log(xhr);
 			if (xhr.getResponseHeader("Content-Type") == "application/x-bittorrent") {
 				xhr.abort();
 				callbackTorrent(url);
@@ -121,7 +122,7 @@ function downloadMagnet(url){
 	if (xh.readyState == 4){
     	if (xh.status == 200){
            	var filename = getFilename(url);
-			notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', filename, 7000);
+			notif('img/down.png', 'D\351marrage du torrent  :', filename, 7000);
 			checkFinished();
         }
     }
@@ -137,7 +138,7 @@ function downloadHTTP(url){
 	if (xh.readyState == 4){
     	if (xh.status == 200){
            	var filename = getFilename(url);
-			notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', filename, 7000);
+			notif('img/down.png', 'D\351marrage du fichier  :', filename, 7000);
 			checkFinished();
         }
     }
@@ -151,6 +152,8 @@ function downloadTorrent (url) {
 	xhr.responseType = "arraybuffer";
 	
 	xhr.onload = function(ev) {
+		if(typeof(window.BlobBuilder) === "undefined")
+			BlobBuilder = window.WebKitBlobBuilder;
 	    var blob = new BlobBuilder();
 	    blob.append(xhr.response);
 	    

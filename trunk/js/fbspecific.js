@@ -39,12 +39,12 @@ function notif(img,title,txt, timeout)
   	}
 }
 
-if (chrome){
+if (typeof(window.chrome)  !== "undefined"){
 	var title = "Download on my Freebox";
   	var id = chrome.contextMenus.create({"title": title, "contexts":["link"],"onclick": onClick});
 }
 
-if (safari){
+if (typeof(window.safari)  !== "undefined"){
 	function performCommand(event) {
 		if (event.command === "download-fb"){
        		download(event.userInfo);

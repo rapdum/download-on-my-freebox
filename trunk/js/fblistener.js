@@ -50,6 +50,7 @@ function checkFinished(){
   					{
   						if (notDone.indexOf("$"+ file.id +"$")>=0 )
   						{
+  							if (localStorage["freebox_display_popup"]==="true")
   							notif( "img/ok.png", "T\351l\351chargement termin\351:", file.name,  0);
   						}
   					}
