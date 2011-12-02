@@ -17,6 +17,7 @@
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
 var notDone = localStorage["notDone"];
+var freeboxUrl = "http://" + localStorage["freeboxUrl"];
 if (!notDone) notDone="";
 function onload()
 {
@@ -28,7 +29,7 @@ function checkFinished(){
 	
   var xh = new XMLHttpRequest();
   var params = "method=download.list";
-  xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
+  xh.open("POST", freeboxUrl + "/download.cgi", false);  
   xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
   xh.send(params);

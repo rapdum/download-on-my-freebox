@@ -1,6 +1,6 @@
 <html>
 <head><title>Download on my freebox</title></head>
-<script src="js/fbdownload.js"></script>
+<script src="js/fbcommon.js"></script>
 <script type="text/javascript">
 
 var imgok = "img/ok.png";
@@ -8,7 +8,8 @@ var imgnok = "img/nok.png";
 
 function checkPassword(){
   var pass = localStorage["freebox_password"];
-  var ok = login( pass );
+  
+  function loginCB(ok){
   var select = document.getElementById("Check");
   var err = document.getElementById("err");
   console.log(err);
@@ -20,6 +21,8 @@ function checkPassword(){
   	select.src = imgnok;
   	err.innerText=ok.error;
   	}
+	}
+	login( pass , loginCB);
 }
 
 function save_options() {
@@ -27,7 +30,16 @@ function save_options() {
   localStorage["freebox_password"] = select.value;
   select = document.getElementById("display_popup");
   localStorage["freebox_display_popup"] = select.checked;
-  
+  select = document.getElementById("url");
+  if (select.value != "")
+  {
+	localStorage["freeboxUrl"] = select.value;
+  }
+  else 
+  {
+	localStorage["freeboxUrl"] = "mafreebox.freebox.fr";
+  }
+  console.log(localStorage["freeboxUrl"]);
   checkPassword();
   
   // Update status to let user know options were saved.
@@ -51,6 +63,15 @@ function restore_options() {
   var select = document.getElementById("display_popup");
   select.checked = eval(display_popup);
   
+  
+  var url = localStorage["freeboxUrl"];
+  if (!url) {
+    return;
+  }
+  var select = document.getElementById("url");
+  select.value = url;
+  
+  
   var pass = localStorage["freebox_password"];
   if (!pass) {
     return;
@@ -65,6 +86,7 @@ function restore_options() {
 </script>
 
 <body onload="restore_options()">
+<font face="Arial">
 	<center>
 		<table>
 			<tr>
@@ -72,21 +94,41 @@ function restore_options() {
 					<img src="img/down.png"  width="32"/> 
 				</td>
 				<td>
-					Download on my freebox
+					<b>Download on my freebox</b>
 				</td>
 			</tr>
 		</table>
-Mot de passe:
-<input type="password"  name="passwd" id="password"> 
-<img id="Check" name="Check" width="16"/> 
-<div id="err"/></div>
-<br>
-<input type="checkbox"  name="display_popup" id="display_popup"> Afficher les popups de fin de t&eacute;l&eacute;chargement
-<br>
-<br>
-<button onclick="save_options()">Save</button>
-<div id="status"/></div>
-</center>
+		<table>
+			<tr>
+				<td align="right">URL de la freebox pour l'accès à distance :</td>
+				<td><input type="text"  name="url" id="url">  </td>
+				<td> </td>
+			</tr>
+			<tr>
+				<td align="right">Mot de passe :</td>
+				<td><input type="password"  name="passwd" id="password"> </td>
+				<td> <img id="Check" name="Check" width="16"/> </td>
+			</tr>
+			<tr>
+				<td> </td>
+				<td><div id="err"/><font color="#FF0000"></font></div></td>
+			</tr>
+			<tr>
+				<td align="right"> Afficher les popups de fin de t&eacute;l&eacute;chargement : </td>
+				<td><input type="checkbox"  name="display_popup" id="display_popup"> </td>
+				<td> </td>
+			</tr>
+			<tr><td/></tr> 
+			<tr>
+				<td> </td>
+				<td><button onclick="save_options()">Save</button><td/>
+				<td> </td>
+			</tr>
+		</table>
 
+		
+		<div id="status"/></div>
+	</center>
+</font>
 </body>
 </html>

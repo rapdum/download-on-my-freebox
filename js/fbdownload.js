@@ -17,44 +17,8 @@
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
 
-function translateErrorCode(code,def)
-{
-	if (code == 1 ) return "Veuillez saisir un mot de passe correct dans les options du plugin";
-	if (code == 101) return "La freebox n'est pas joignable";
-	return def;
-}
+ 
 
-
-function login( pass ){
-  
-  var params = "login=freebox&passwd=" + encodeURIComponent(pass);
-  var xh = new XMLHttpRequest();
-  xh.open("POST", "http://mafreebox.freebox.fr/login.php", false);
-  xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
-  
-  var result=new Object();
-  result.result = false;
-  
-  try{
-  	xh.send(params);
-    if (xh.readyState == 4) 
-    {
-       if (xh.status == 200)
-       {      
-       		var jsondata=eval("("+xh.responseText+")");
-       		jsondata.error = translateErrorCode(jsondata.errcode);
-			return jsondata;
-	   }  
-	   result.error = translateErrorCode(xh.status, xh.statusText);
-    }
-    }
-    catch(err)
-    {
-    	result.error=translateErrorCode(err.code,err);
-    }
-    return result;
-}
 
 function getMethod(url){
 
@@ -99,23 +63,26 @@ function download(url){
   	var pass = localStorage["freebox_password"];
 
   	// check if we are correctly log we need a cookie to send download request
-  	res = login(pass);
-  	if (res.result == false){
-  		alert(res.error);
-  		return;
-  	}
   	
-  	if( url.substr(0,7) == "magnet:")
-  		downloadMagnet(url);
-  	else
-		dispatchTorrent(url, downloadTorrent, downloadHTTP);
-		
+  	function cb(res){
+	if (res.result == false){
+  		alert(res.error);
+  		
+  	}else{
+  	
+		if( url.substr(0,7) == "magnet:")
+			downloadMagnet(url);
+		else
+			dispatchTorrent(url, downloadTorrent, downloadHTTP);
+	}
+	}	
+	login(pass,cb);
 }
 
 function downloadMagnet(url){
 	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.torrent_add";
     var xh = new XMLHttpRequest();
-  	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
+  	xh.open("POST", buildURL("/download.cgi"), false);  
   	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
   	xh.send(params);
@@ -131,7 +98,7 @@ function downloadMagnet(url){
 function downloadHTTP(url){
 	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.http_add";
     var xh = new XMLHttpRequest();
-  	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
+  	xh.open("POST", buildURL("/download.cgi"), false);  
   	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
   	xh.send(params);
@@ -198,7 +165,7 @@ function encodeTorrent (file, callback) {
 function uploadTorrent (data, torrent) {
 	//send everything
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', "http://mafreebox.freebox.fr:9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
+	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
 	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
 	xhr.send('{ "arguments": { "metainfo": "' + data + '" }, "method": "torrent-add" }');
 	xhr.onreadystatechange = function () {
