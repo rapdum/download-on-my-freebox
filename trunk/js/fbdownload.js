@@ -28,7 +28,29 @@ function getMethod(url){
      return  "download.http_add";
 }
 
-function dispatchTorrent(url, callbackTorrent, callbackHttp){
+function dispatchTorrent( url)
+{
+	function onTimeout(){
+		xhr.abort();
+		downloadFreeTorrent(url);
+	};
+	
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
+	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
+	xhr.send();
+	xhr.onreadystatechange = function () {
+	    if (xhr.readyState === 4) {
+	    	if (xhr.status == 200){
+				clearTimeout(timeout);
+				downloadTransmissionTorrent( url );
+        	}  
+	    }
+	};
+	
+	var timeout=setTimeout(onTimeout,1000);
+}
+function dispatchDownload(url){
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", url, true);
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
@@ -37,11 +59,11 @@ function dispatchTorrent(url, callbackTorrent, callbackHttp){
 			console.log(xhr);
 			if (xhr.getResponseHeader("Content-Type") == "application/x-bittorrent") {
 				xhr.abort();
-				callbackTorrent(url);
+				dispatchTorrent(url);
 				}
 			else{
 				xhr.abort();
-				callbackHttp(url);	
+				downloadFreeHTTP(url);	
 			}
 		}
 	}
@@ -71,32 +93,18 @@ function download(url){
   	}else{
   	
 		if( url.substr(0,7) == "magnet:")
-			downloadMagnet(url);
+			downloadFreeTorrent(url);
 		else
-			dispatchTorrent(url, downloadTorrent, downloadHTTP);
+			dispatchDownload(url);
 	}
 	}	
 	login(pass,cb);
 }
 
-function downloadMagnet(url){
-	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.torrent_add";
-    var xh = new XMLHttpRequest();
-  	xh.open("POST", buildURL("/download.cgi"), false);  
-  	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
-  	xh.send(params);
-	if (xh.readyState == 4){
-    	if (xh.status == 200){
-           	var filename = getFilename(url);
-			notif('img/down.png', 'D\351marrage du torrent  :', filename, 7000);
-			checkFinished();
-        }
-    }
-}
 
-function downloadHTTP(url){
-	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.http_add";
+
+function downloadFree(url,method){
+	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=" + method;
     var xh = new XMLHttpRequest();
   	xh.open("POST", buildURL("/download.cgi"), false);  
   	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -111,8 +119,15 @@ function downloadHTTP(url){
     }
 }
 
+function downloadFreeHTTP(url){
+	downloadFree(url, "download.http_add");
+}
 
-function downloadTorrent (url) {
+function downloadFreeTorrent(url){
+	downloadFree(url, "download.torrent_add");
+}
+
+function downloadTransmissionTorrent (url) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, true);
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
