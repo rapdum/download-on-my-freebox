@@ -72,7 +72,6 @@ function login( pass, cb ){
 
 function sendRequest(path, params, contentType, callback)
 {
-	console.log("sending : " + freeboxUrl + path + " with : " + params);
 	xh.open("POST", freeboxUrl + path, false);  
 	xh.setRequestHeader("Content-Type", contentType);
 	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
