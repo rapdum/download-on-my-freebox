@@ -43,13 +43,14 @@ function checkFinished(){
            		for (i in res.result)
   				{
   					var file = res.result[i];
-  					if (file.status!='done' && file.status!="seeding")
+  					
+					if (file.status!='done' && file.status!="seeding")
   					{
-  						newNotDone +="$"+ file.id +"$";
+  						newNotDone +="$"+ file.name+"$";
   					}
   					else
   					{
-  						if (notDone.indexOf("$"+ file.id +"$")>=0 )
+  						if (notDone.indexOf("$"+ file.name +"$")>=0 )
   						{
   							if (localStorage["freebox_display_popup"]==="true")
   							notif( "img/ok.png", "T\351l\351chargement termin\351:", file.name,  0);

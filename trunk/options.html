@@ -10,17 +10,17 @@ function checkPassword(){
   var pass = localStorage["freebox_password"];
   
   function loginCB(ok){
-  var select = document.getElementById("Check");
-  var err = document.getElementById("err");
-  console.log(err);
-  if (ok.result) {
-  	select.src = imgok;
-  	err.innerText="";
-  }
-  else {
-  	select.src = imgnok;
-  	err.innerText=ok.error;
-  	}
+	  var select = document.getElementById("Check");
+	  var err = document.getElementById("err");
+	  console.log(err);
+	  if (ok.result) {
+		select.src = imgok;
+		err.innerText="";
+	  }
+	  else {
+		select.src = imgnok;
+		err.innerText=ok.error;
+		}
 	}
 	login( pass , loginCB);
 }
