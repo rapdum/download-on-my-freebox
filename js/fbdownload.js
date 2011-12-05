@@ -38,7 +38,7 @@ function dispatchTorrent( url)
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
 	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
-	xhr.send();
+	xhr.send('{"method": "torrent-get" }');
 	xhr.onreadystatechange = function () {
 	    if (xhr.readyState === 4) {
 	    	if (xhr.status == 200){
@@ -103,7 +103,7 @@ function download(url){
 
 
 
-function downloadFree(url,method){
+function downloadFree(url,method, message){
 	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=" + method;
     var xh = new XMLHttpRequest();
   	xh.open("POST", buildURL("/download.cgi"), false);  
@@ -113,18 +113,18 @@ function downloadFree(url,method){
 	if (xh.readyState == 4){
     	if (xh.status == 200){
            	var filename = getFilename(url);
-			notif('img/down.png', 'D\351marrage du fichier  :', filename, 7000);
+			notif('img/down.png', message, filename, 7000);
 			checkFinished();
         }
     }
 }
 
 function downloadFreeHTTP(url){
-	downloadFree(url, "download.http_add");
+	downloadFree(url, "download.http_add", 'D\351marrage du fichier  :');
 }
 
 function downloadFreeTorrent(url){
-	downloadFree(url, "download.torrent_add");
+	downloadFree(url, "download.torrent_add", '(D\351mon tranmission injoignable en acces distant. Les Torrents authentifi\351s ne seront pas t\351l\351charg\351s).    D\351marrage du torrent  :');
 }
 
 function downloadTransmissionTorrent (url) {
