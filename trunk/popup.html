@@ -96,12 +96,16 @@ function show(status)
 	buildInfo();
 }
 function onload()
-{
-	login(localStorage["freebox_password"]);
-	var select = document.getElementById("seedbox");
-	select.href=buildURL("/download.php");	
-	update();
-   	setInterval(update,3000);
+{	
+	
+	function onLogin()
+	{	
+		setInterval(update,3000);
+		update();
+		
+	}
+	
+	login(localStorage["freebox_password"],onLogin);
 }
 
 
@@ -135,6 +139,8 @@ function buildControl(file){
 }
 
 function buildInfo(){
+	var selectseed = document.getElementById("seedbox");
+	selectseed.href=buildURL("/download.php");
 	if (xh.readyState == 4 && xh.status == 200) {
 		var res = eval("(" + xh.responseText + ")");
 		var size = 0;
@@ -212,7 +218,7 @@ function buildInfo(){
 <body onLoad="onload()">
 <div id="links">
 <table width="400"><tr><td>
-<a href="" onclick='("running,paused");menu("encours");' id='encours'>En cours</a>
+<a href="" onclick='show("running,paused");menu("encours");' id='encours'>En cours</a>
 <a href="" onclick='show("done,seeding");menu("termines");' id='termines'>T&eacute;l&eacute;charg&eacute;s</a>
 <a id="seedbox" href="http://mafreebox.freebox.fr/download.php" target="_blank">Seedbox</a> 
 </td></tr></table>
