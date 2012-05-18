@@ -1,0 +1,92 @@
+<html>
+<head><title>Download on my freebox</title></head>
+<script src="js/fbdownload.js"></script>
+<script type="text/javascript">
+
+var imgok = "img/ok.png";
+var imgnok = "img/nok.png";
+
+function checkPassword(){
+  var pass = localStorage["freebox_password"];
+  var ok = login( pass );
+  var select = document.getElementById("Check");
+  var err = document.getElementById("err");
+  console.log(err);
+  if (ok.result) {
+  	select.src = imgok;
+  	err.innerText="";
+  }
+  else {
+  	select.src = imgnok;
+  	err.innerText=ok.error;
+  	}
+}
+
+function save_options() {
+  var select = document.getElementById("password");
+  localStorage["freebox_password"] = select.value;
+  select = document.getElementById("display_popup");
+  localStorage["freebox_display_popup"] = select.checked;
+  
+  checkPassword();
+  
+  // Update status to let user know options were saved.
+  var status = document.getElementById("status");
+  status.innerHTML = "Options Saved.";
+  setTimeout(function() {
+    status.innerHTML = "";
+  }, 750);
+}
+
+// Restores select box state to saved value from localStorage.
+function restore_options() {
+  
+  var display_popup = localStorage["freebox_display_popup"];
+  if (!display_popup) 
+  {
+  		//setdefault
+  		localStorage["freebox_display_popup"] = true;
+  		display_popup = true;
+  	}
+  var select = document.getElementById("display_popup");
+  select.checked = eval(display_popup);
+  
+  var pass = localStorage["freebox_password"];
+  if (!pass) {
+    return;
+  }
+  var select = document.getElementById("password");
+  select.value = pass;
+  checkPassword();
+  
+  
+}
+
+</script>
+
+<body onload="restore_options()">
+	<center>
+		<table>
+			<tr>
+				<td>
+					<img src="img/down.png"  width="32"/> 
+				</td>
+				<td>
+					Download on my freebox
+				</td>
+			</tr>
+		</table>
+Mot de passe:
+<input type="password"  name="passwd" id="password"> 
+<img id="Check" name="Check" width="16"/> 
+<div id="err"/></div>
+<br>
+<input type="checkbox"  name="display_popup" id="display_popup"> Afficher les popups de fin de t&eacute;l&eacute;chargement
+<br>
+<br>
+<button onclick="save_options()">Save</button>
+<div id="status"/></div>
+</center>
+
+</body>
+</html>
