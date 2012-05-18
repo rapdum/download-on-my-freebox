@@ -17,7 +17,6 @@
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
 var notDone = localStorage["notDone"];
-var freeboxUrl = "http://" + localStorage["freeboxUrl"];
 if (!notDone) notDone="";
 function onload()
 {
@@ -29,7 +28,7 @@ function checkFinished(){
 	
   var xh = new XMLHttpRequest();
   var params = "method=download.list";
-  xh.open("POST", freeboxUrl + "/download.cgi", false);  
+  xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
   xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
   xh.send(params);
@@ -43,14 +42,13 @@ function checkFinished(){
            		for (i in res.result)
   				{
   					var file = res.result[i];
-  					
-					if (file.status!='done' && file.status!="seeding")
+  					if (file.status!='done' && file.status!="seeding")
   					{
-  						newNotDone +="$"+ file.name+"$";
+  						newNotDone +="$"+ file.id +"$";
   					}
   					else
   					{
-  						if (notDone.indexOf("$"+ file.name +"$")>=0 )
+  						if (notDone.indexOf("$"+ file.id +"$")>=0 )
   						{
   							if (localStorage["freebox_display_popup"]==="true")
   							notif( "img/ok.png", "T\351l\351chargement termin\351:", file.name,  0);

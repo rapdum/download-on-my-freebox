@@ -17,8 +17,44 @@
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
 
- 
+function translateErrorCode(code,def)
+{
+	if (code == 1 ) return "Veuillez saisir un mot de passe correct dans les options du plugin";
+	if (code == 101) return "La freebox n'est pas joignable";
+	return def;
+}
 
+
+function login( pass ){
+  
+  var params = "login=freebox&passwd=" + encodeURIComponent(pass);
+  var xh = new XMLHttpRequest();
+  xh.open("POST", "http://mafreebox.freebox.fr/login.php", false);
+  xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
+  
+  var result=new Object();
+  result.result = false;
+  
+  try{
+  	xh.send(params);
+    if (xh.readyState == 4) 
+    {
+       if (xh.status == 200)
+       {      
+       		var jsondata=eval("("+xh.responseText+")");
+       		jsondata.error = translateErrorCode(jsondata.errcode);
+			return jsondata;
+	   }  
+	   result.error = translateErrorCode(xh.status, xh.statusText);
+    }
+    }
+    catch(err)
+    {
+    	result.error=translateErrorCode(err.code,err);
+    }
+    return result;
+}
 
 function getMethod(url){
 
@@ -28,29 +64,7 @@ function getMethod(url){
      return  "download.http_add";
 }
 
-function dispatchTorrent( url)
-{
-	function onTimeout(){
-		xhr.abort();
-		downloadFreeTorrent(url);
-	};
-	
-	var xhr = new XMLHttpRequest();
-	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
-	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
-	xhr.send('{"method": "torrent-get" }');
-	xhr.onreadystatechange = function () {
-	    if (xhr.readyState === 4) {
-	    	if (xhr.status == 200){
-				clearTimeout(timeout);
-				downloadTransmissionTorrent( url );
-        	}  
-	    }
-	};
-	
-	var timeout=setTimeout(onTimeout,1000);
-}
-function dispatchDownload(url){
+function dispatchTorrent(url, callbackTorrent, callbackHttp){
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", url, true);
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
@@ -59,11 +73,11 @@ function dispatchDownload(url){
 			console.log(xhr);
 			if (xhr.getResponseHeader("Content-Type") == "application/x-bittorrent") {
 				xhr.abort();
-				dispatchTorrent(url);
+				callbackTorrent(url);
 				}
 			else{
 				xhr.abort();
-				downloadFreeHTTP(url);	
+				callbackHttp(url);	
 			}
 		}
 	}
@@ -85,49 +99,53 @@ function download(url){
   	var pass = localStorage["freebox_password"];
 
   	// check if we are correctly log we need a cookie to send download request
-  	
-  	function cb(res){
-	if (res.result == false){
+  	res = login(pass);
+  	if (res.result == false){
   		alert(res.error);
-  		
-  	}else{
+  		return;
+  	}
   	
-		if( url.substr(0,7) == "magnet:")
-			downloadFreeTorrent(url);
-		else
-			dispatchDownload(url);
-	}
-	}	
-	login(pass,cb);
+  	if( url.substr(0,7) == "magnet:")
+  		downloadMagnet(url);
+  	else
+		dispatchTorrent(url, downloadTorrent, downloadHTTP);
+		
 }
 
-
-
-function downloadFree(url,method, message){
-	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=" + method;
+function downloadMagnet(url){
+	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.torrent_add";
     var xh = new XMLHttpRequest();
-  	xh.open("POST", buildURL("/download.cgi"), false);  
+  	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
   	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
   	xh.send(params);
 	if (xh.readyState == 4){
     	if (xh.status == 200){
            	var filename = getFilename(url);
-			notif('img/down.png', message, filename, 7000);
+			notif('img/down.png', 'D\351marrage du torrent  :', filename, 7000);
 			checkFinished();
         }
     }
 }
 
-function downloadFreeHTTP(url){
-	downloadFree(url, "download.http_add", 'D\351marrage du fichier  :');
+function downloadHTTP(url){
+	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.http_add";
+    var xh = new XMLHttpRequest();
+  	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
+  	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
+  	xh.send(params);
+	if (xh.readyState == 4){
+    	if (xh.status == 200){
+           	var filename = getFilename(url);
+			notif('img/down.png', 'D\351marrage du fichier  :', filename, 7000);
+			checkFinished();
+        }
+    }
 }
 
-function downloadFreeTorrent(url){
-	downloadFree(url, "download.torrent_add", '(D\351mon tranmission injoignable en acces distant. Les Torrents authentifi\351s ne seront pas t\351l\351charg\351s).    D\351marrage du torrent  :');
-}
 
-function downloadTransmissionTorrent (url) {
+function downloadTorrent (url) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, true);
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
@@ -180,7 +198,7 @@ function encodeTorrent (file, callback) {
 function uploadTorrent (data, torrent) {
 	//send everything
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
+	xhr.open('POST', "http://mafreebox.freebox.fr:9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
 	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
 	xhr.send('{ "arguments": { "metainfo": "' + data + '" }, "method": "torrent-add" }');
 	xhr.onreadystatechange = function () {
