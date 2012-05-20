@@ -5,18 +5,20 @@
 	font-size: 12px;
 }
 TABLE {
-	width: 400px;
+	width: 500px;
 }
 .titre_dl {
 	cursor: help;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: bold;
+	line-height: 14px;
 }
 H3 {
-	width: 150px;
-	text-overflow: ellipsis;
 	overflow: hidden;
 	white-space: nowrap;
 	outline: 0 !important;
-	font-weight: normal;
+	font-weight: bold;
 	padding-top: 11px;
 }
 #links {
@@ -173,10 +175,15 @@ function buildInfo(){
 						speed = Math.round(file.rx_rate / 1000) + " Ko/s";
 					}
 					active += "<tr>";
-						active += "<td><a class='titre_dl' title=\"" + file.name + "\"><h3>" + file.name + "</h3></a> </td>";
-						active += '<td align="right" width="50"> ' + finished + "%</td>";
-						active += '<td align="right" width="75"> ' + speed + "</td>";
-						active += '<td align="right" width="75"> ' + temps + "</td>";
+						active += "<td><a class='titre_dl' title=\"" + file.name + "\">" + file.name + "</a> </td>";
+					active += '</tr>';
+					active += '<tr>';
+						if (file.status != "paused"){
+							active += '<td align="left"> ' + finished + "% (" + speed + ") - " + temps +"</td>";
+						} else {
+							active += '<td align="left"> ' + finished + "% - pause</td>";
+						}//active += '<td align="right" width="75"> ' + speed + "</td>";
+						//active += '<td align="right" width="75"> ' + temps + "</td>";
 						active += '<td align="right" width="35">' + buildControl(file) + '</td>';
 					active += '</tr>';
 					active += '<tr>';
