@@ -113,6 +113,8 @@ function download(url){
 }
 
 function downloadMagnet(url){
+	
+	console.log("Magnet found");
 	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.torrent_add";
     var xh = new XMLHttpRequest();
   	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
@@ -129,6 +131,8 @@ function downloadMagnet(url){
 }
 
 function downloadHTTP(url){
+
+	console.log("Download File ");
 	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=download.http_add";
     var xh = new XMLHttpRequest();
   	xh.open("POST", "http://mafreebox.freebox.fr/download.cgi", false);  
@@ -146,12 +150,16 @@ function downloadHTTP(url){
 
 
 function downloadTorrent (url) {
+	
+	console.log("Download Torrent");
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, true);
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
 	xhr.responseType = "arraybuffer";
 	
 	xhr.onload = function(ev) {
+	
+		console.log("Create Blob");
 		if(typeof(window.BlobBuilder) === "undefined")
 			BlobBuilder = window.WebKitBlobBuilder;
 	    var blob = new BlobBuilder();
@@ -167,6 +175,7 @@ function downloadTorrent (url) {
 
 function parseTorrent (file, callback) {
 //function that gonna parse torrent in order to build a info object
+	console.log("Parse Torrent");
 	infoReader = new FileReader();
 	infoReader.onload = function (ev) {
 		var delo = new Worker('js/bencode.js');
@@ -182,6 +191,7 @@ function encodeTorrent (file, callback) {
 	//check if everything is ok we have a torrent,
 	parseTorrent(file, function (torrent) {
 		if (torrent != null) {
+			console.log("Found :" + torrent.info.name);
 			//encode data that gonna be transmited
 			var reader = new FileReader();
 			reader.onload = function (ev) {
@@ -197,6 +207,8 @@ function encodeTorrent (file, callback) {
 
 function uploadTorrent (data, torrent) {
 	//send everything
+	
+	console.log("Upload Torrent");
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', "http://mafreebox.freebox.fr:9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
 	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
@@ -204,6 +216,8 @@ function uploadTorrent (data, torrent) {
 	xhr.onreadystatechange = function () {
 	    if (xhr.readyState === 4) {
 	    	if (xhr.status == 200){
+				console.log("Starting Download :");
+				console.log(torrent);
 				notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', torrent.info.name, 7000);
 				checkFinished();
         	}  
