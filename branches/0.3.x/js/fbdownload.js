@@ -220,7 +220,13 @@ function uploadTorrent (data, torrent) {
 				console.log(torrent);
 				notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', torrent.info.name, 7000);
 				checkFinished();
-        	}  
+        	} 
+			if (xhr.status == 401){
+				console.log("Fail to Download :");
+				console.log(torrent);
+				notif('img/down.png', 'Vous devez vous authentifier au D\351mon transmission dans les options du plugin.', torrent.info.name, 7000);
+				checkFinished();
+        	} 
 	    }
 	};
 
