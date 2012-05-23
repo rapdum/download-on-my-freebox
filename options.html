@@ -20,6 +20,24 @@ function checkPassword(){
   	select.src = imgnok;
   	err.innerText=ok.error;
   	}
+	var xhr = new XMLHttpRequest();
+	
+    select = document.getElementById("DCheck");
+	var auth = document.getElementById("auth");
+	xhr.open('POST', "http://mafreebox.freebox.fr:9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
+	xhr.send('{}');
+	xhr.onreadystatechange = function () {
+	    if (xhr.readyState === 4) {
+	    	if (xhr.status == 200){
+			select.src = imgok;
+			auth.style.visibility ="hidden";
+        	}
+	    	if (xhr.status == 401){
+			select.src = imgnok;
+			auth.style.visibility ="visible";
+        	}  
+	    }
+	};
 }
 
 function save_options() {
@@ -80,6 +98,11 @@ Mot de passe:
 <input type="password"  name="passwd" id="password"> 
 <img id="Check" name="Check" width="16"/> 
 <div id="err"/></div>
+<br>Démon transmission <img id="DCheck" name="DCheck" width="16"/> 
+<div id="auth"/>
+<a id="auth" name="auth" href="http://mafreebox.freebox.fr:9091/transmission/rpc"> authentification </a>
+(login:freebox, mdp: mot de passe freebox)
+</div>
 <br>
 <input type="checkbox"  name="display_popup" id="display_popup"> Afficher les popups de fin de t&eacute;l&eacute;chargement
 <br>
