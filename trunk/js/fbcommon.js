@@ -41,6 +41,7 @@ function login( pass, cb ){
 	xh.abort();
 	var result=new Object();
 	result.result = false;
+	console.log("logintimeout");
 	cb(result);
 	}
 
@@ -49,7 +50,9 @@ function login( pass, cb ){
   xh.onreadystatechange=function(){
   var result=new Object();
   result.result = false;
-   if (xh.readyState == 4) {
+   if (xh.readyState != 4) {return;}
+		
+      clearTimeout(xmlHttpTimeout);
        if (xh.status == 200){      
        		var jsondata=eval("("+xh.responseText+")");
 			
@@ -59,12 +62,11 @@ function login( pass, cb ){
 			//return jsondata;
 	   }  
 	   result.error = translateErrorCode(xh.status, xh.statusText);
-    }
-      clearTimeout(xmlHttpTimeout);
+    
    }
 
   	xh.send(params);
-	var xmlHttpTimeout=setTimeout(ajaxTimeout,1000);
+	var xmlHttpTimeout=setTimeout(ajaxTimeout,3000);
     //return result;
 	
 }
@@ -72,7 +74,7 @@ function login( pass, cb ){
 
 function sendRequest(path, params, contentType, callback)
 {
-	xh.open("POST", freeboxUrl + path, false);  
+	xh.open("POST", freeboxUrl + path, true);  
 	xh.setRequestHeader("Content-Type", contentType);
 	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
 	xh.onreadystatechange = callback;

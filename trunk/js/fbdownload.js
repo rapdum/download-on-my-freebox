@@ -101,8 +101,6 @@ function download(url){
 	login(pass,cb);
 }
 
-
-
 function downloadFree(url,method, message){
 	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=" + method;
     var xh = new XMLHttpRequest();
@@ -119,21 +117,33 @@ function downloadFree(url,method, message){
     }
 }
 
+
 function downloadFreeHTTP(url){
 	downloadFree(url, "download.http_add", 'D\351marrage du fichier  :');
 }
 
 function downloadFreeTorrent(url){
-	downloadFree(url, "download.torrent_add", '(D\351mon tranmission injoignable en acces distant. Les Torrents authentifi\351s ne seront pas t\351l\351charg\351s).    D\351marrage du torrent  :');
+	if (localStorage["freeboxUrl"] == "mafreebox.freebox.fr")
+	{
+		downloadFree(url, "download.torrent_add", 'D\351marrage du magnet  :');
+	}
+	else
+	{
+		downloadFree(url, "download.torrent_add", '(D\351mon tranmission injoignable en acces distant. Les Torrents authentifi\351s ne seront pas t\351l\351charg\351s).    D\351marrage du torrent  :');
+	}
 }
 
 function downloadTransmissionTorrent (url) {
+	
+	console.log("Download Torrent");
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, true);
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
 	xhr.responseType = "arraybuffer";
 	
 	xhr.onload = function(ev) {
+	
+		console.log("Create Blob");
 		if(typeof(window.BlobBuilder) === "undefined")
 			BlobBuilder = window.WebKitBlobBuilder;
 	    var blob = new BlobBuilder();
@@ -149,6 +159,7 @@ function downloadTransmissionTorrent (url) {
 
 function parseTorrent (file, callback) {
 //function that gonna parse torrent in order to build a info object
+	console.log("Parse Torrent");
 	infoReader = new FileReader();
 	infoReader.onload = function (ev) {
 		var delo = new Worker('js/bencode.js');
@@ -164,6 +175,7 @@ function encodeTorrent (file, callback) {
 	//check if everything is ok we have a torrent,
 	parseTorrent(file, function (torrent) {
 		if (torrent != null) {
+			console.log("Found :" + torrent.info.name);
 			//encode data that gonna be transmited
 			var reader = new FileReader();
 			reader.onload = function (ev) {
@@ -179,6 +191,8 @@ function encodeTorrent (file, callback) {
 
 function uploadTorrent (data, torrent) {
 	//send everything
+	
+	console.log("Upload Torrent");
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
 	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
@@ -186,9 +200,17 @@ function uploadTorrent (data, torrent) {
 	xhr.onreadystatechange = function () {
 	    if (xhr.readyState === 4) {
 	    	if (xhr.status == 200){
+				console.log("Starting Download :");
+				console.log(torrent);
 				notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', torrent.info.name, 7000);
 				checkFinished();
-        	}  
+        	} 
+			if (xhr.status == 401){
+				console.log("Fail to Download :");
+				console.log(torrent);
+				notif('img/down.png', 'Vous devez vous authentifier au D\351mon transmission dans les options du plugin.', torrent.info.name, 7000);
+				checkFinished();
+        	} 
 	    }
 	};
 

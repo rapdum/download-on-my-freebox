@@ -22,19 +22,19 @@ if (!notDone) notDone="";
 function onload()
 {
    console.log('start listener');
-   setInterval(checkFinished,3000);
+   setInterval(checkFinished,10000);
 }
 
 function checkFinished(){
 	
   var xh = new XMLHttpRequest();
   var params = "method=download.list";
-  xh.open("POST", freeboxUrl + "/download.cgi", false);  
+  xh.open("POST", freeboxUrl + "/download.cgi", true);  
   xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
   xh.send(params);
-   if (xh.readyState == 4) /* 4 : état "complete" */
-        {
+   if (xh.readyState != 4) /* 4 : état "complete" */
+        {return;}
            if (xh.status == 200) /* 200 : code HTTP pour OK */
            {
            		var res = eval("(" + xh.responseText + ")");
@@ -63,7 +63,7 @@ function checkFinished(){
            	if (xh.status == 403){
            		login(localStorage["freebox_password"]);
 			}           		
-        }
+        
     
     }
 
