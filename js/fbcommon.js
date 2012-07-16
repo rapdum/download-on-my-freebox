@@ -31,6 +31,7 @@ function buildURL(path)
 
 function login( pass, cb ){
   var params = "login=freebox&passwd=" + encodeURIComponent(pass);
+  console.log( "Essai de login sur "+ buildURL("/login.php"));
   var xh = new XMLHttpRequest();
 
   xh.open("POST", buildURL("/login.php"), true);
@@ -41,7 +42,8 @@ function login( pass, cb ){
 	xh.abort();
 	var result=new Object();
 	result.result = false;
-	console.log("logintimeout");
+	result.error = "Le temps pour se connecté est dépassé";
+	console.log(result);
 	cb(result);
 	}
 
@@ -51,30 +53,24 @@ function login( pass, cb ){
   var result=new Object();
   result.result = false;
    if (xh.readyState != 4) {return;}
-		
       clearTimeout(xmlHttpTimeout);
        if (xh.status == 200){      
        		var jsondata=eval("("+xh.responseText+")");
-			
        		jsondata.error = translateErrorCode(jsondata.errcode,"Mauvais mot de passe");
+			if (jsondata.result) jsondata.error = "";
 			console.log(jsondata);
 			cb(jsondata);
-			//return jsondata;
 	   }  
 	   result.error = translateErrorCode(xh.status, xh.statusText);
-    
    }
-
   	xh.send(params);
 	var xmlHttpTimeout=setTimeout(ajaxTimeout,3000);
-    //return result;
-	
 }
 
 
 function sendRequest(path, params, contentType, callback)
 {
-	xh.open("POST", freeboxUrl + path, true);  
+	xh.open("POST", freeboxUrl + path, false);  
 	xh.setRequestHeader("Content-Type", contentType);
 	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
 	xh.onreadystatechange = callback;
