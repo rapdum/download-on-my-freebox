@@ -17,8 +17,6 @@
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
 
- 
-
 
 function getMethod(url){
 

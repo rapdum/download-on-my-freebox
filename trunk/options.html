@@ -12,7 +12,6 @@ function checkPassword(){
   function loginCB(ok){
 	  var select = document.getElementById("Check");
 	  var err = document.getElementById("err");
-	  console.log(err);
 	  if (ok.result) {
 		select.src = imgok;
 		err.innerText="";
@@ -50,7 +49,7 @@ function checkPassword(){
 		xhr.abort();
 	};
 	xhr.onreadystatechange = function () {
-	    if (xhr.readyState === 4) {
+	    if (xhr.readyState != 4) return;
 	    	if (xhr.status == 200){
 			select.src = imgok;
 			auth.style.visibility ="hidden";
@@ -60,7 +59,6 @@ function checkPassword(){
 			auth.style.visibility ="visible";
         	}  
 			clearTimeout(timeout);
-	    }
 	};
 	var timeout=setTimeout(onTimeout,100);
 }
@@ -119,8 +117,6 @@ function restore_options() {
   var select = document.getElementById("password");
   select.value = pass;
   checkPassword();
-  
-  
 }
 
 </script>
