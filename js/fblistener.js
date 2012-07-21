@@ -16,7 +16,9 @@
  *
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
-
+var notDone = localStorage["notDone"];
+var freeboxUrl = "http://" + localStorage["freeboxUrl"];
+if (!notDone) notDone="";
 function onload()
 {
    console.log('start listener');
@@ -24,61 +26,45 @@ function onload()
 }
 
 function checkFinished(){
-  var notDone = localStorage["notDone"];
-  if (!notDone) notDone="";
-  console.log("checking for new download");
-  var freeboxUrl = "http://" + localStorage["freeboxUrl"];
+	
   var xh = new XMLHttpRequest();
   var params = "method=download.list";
   xh.open("POST", freeboxUrl + "/download.cgi", true);  
   xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
-  
   xh.send(params);
-  function onTimeout(){
-		console.log("checkFinished timeout");
-		xh.abort();
-	};
-	xh.onreadystatechange = function () {
-	   if (xh.readyState != 4) /* 4 : état "complete" */
-			{return;}
-	   if (xh.status == 200) /* 200 : code HTTP pour OK */
-	   {
-			clearTimeout(timeout);
-			console.log("checked!")
-			var res = eval("(" + xh.responseText + ")");
-			var active = ""
-			newNotDone ="";
-			for (i in res.result)
-			{
-				var file = res.result[i];
-				
-				if (file.status!='done' && file.status!="seeding")
-				{
-					newNotDone +="$"+ file.name+"$";
+   if (xh.readyState != 4) /* 4 : état "complete" */
+        {return;}
+           if (xh.status == 200) /* 200 : code HTTP pour OK */
+           {
+           		var res = eval("(" + xh.responseText + ")");
+           		var active = ""
+           		newNotDone ="";
+           		for (i in res.result)
+  				{
+  					var file = res.result[i];
+  					
+					if (file.status!='done' && file.status!="seeding")
+  					{
+  						newNotDone +="$"+ file.name+"$";
+  					}
+  					else
+  					{
+  						if (notDone.indexOf("$"+ file.name +"$")>=0 )
+  						{
+  							if (localStorage["freebox_display_popup"]==="true")
+  							notif( "img/ok.png", "T\351l\351chargement termin\351:", file.name,  0);
+  						}
+  					}
 				}
-				else
-				{
-					if (notDone.indexOf("$"+ file.name +"$")>=0 )
-					{
-						if (localStorage["freebox_display_popup"]==="true")
-						notif( "img/ok.png", "T\351l\351chargement termin\351:", file.name,  0);
-					}
-				}
-			}
-			notDone = newNotDone;
-			localStorage["notDone"] = notDone;
-		}
-		if (xh.status == 403){
-			function cb(res){
-			if (res.result == false){
-				console.log("login failed");
-				}
-			}	
-			login(cb);
-		}         
-	};
-	var timeout=setTimeout(onTimeout,1000);			
+				notDone = newNotDone;
+				localStorage["notDone"] = notDone;
+           	}
+           	if (xh.status == 403){
+           		login(localStorage["freebox_password"]);
+			}           		
+        
+    
     }
 
 onload()

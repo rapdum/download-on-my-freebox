@@ -80,6 +80,7 @@ function onClick(info, tab) {
 
 function download(url){
 
+  	var pass = localStorage["freebox_password"];
 
   	// check if we are correctly log we need a cookie to send download request
   	
@@ -95,7 +96,7 @@ function download(url){
 			dispatchDownload(url);
 	}
 	}	
-	login(cb);
+	login(pass,cb);
 }
 
 function downloadFree(url,method, message){

@@ -103,13 +103,11 @@ function onload()
 	function onLogin()
 	{	
 		setInterval(update,3000);
-		var filter = localStorage["filter"];
-		if (!filter) show("done,seeding");
 		update();
 		
 	}
 	
-	login(onLogin);
+	login(localStorage["freebox_password"],onLogin);
 }
 
 
