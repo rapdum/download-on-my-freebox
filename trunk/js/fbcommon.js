@@ -29,7 +29,9 @@ function buildURL(path)
 	return  freeboxUrl + path;
 }
 
-function login( pass, cb ){
+function login( cb ){
+
+  var pass = localStorage["freebox_password"];
   var params = "login=freebox&passwd=" + encodeURIComponent(pass);
   console.log( "Essai de login sur "+ buildURL("/login.php"));
   var xh = new XMLHttpRequest();
