@@ -1,0 +1,172 @@
+<html>
+<head><title>Download on my freebox</title></head>
+<script src="js/fbcommon.js"></script>
+<script type="text/javascript">
+
+var imgok = "img/ok.png";
+var imgnok = "img/nok.png";
+
+function checkPassword(){
+  var pass = localStorage["freebox_password"];
+  
+  function loginCB(ok){
+	  var select = document.getElementById("Check");
+	  var err = document.getElementById("err");
+	  if (ok.result) {
+		select.src = imgok;
+		err.innerText="";
+	  }
+	  else {
+		select.src = imgnok;
+		err.innerText=ok.error;
+		}
+	}
+	login( pass , loginCB);
+	var xhr = new XMLHttpRequest();
+	
+    select = document.getElementById("DCheck");
+	var auth = document.getElementById("auth");
+	var authremote = document.getElementById("authremote");
+	console.log(buildURL(":9091/transmission/rpc"));
+	xhr.open('POST', buildURL(":9091/transmission/rpc"), true, "freebox", localStorage["freebox_password"]);
+	xhr.send('{}');
+	
+	authremote.style.visibility ="hidden";
+	function onTimeout(){
+		
+		select.src = imgnok;
+		if (localStorage["freeboxUrl"] == "mafreebox.freebox.fr")
+		{	
+		    auth.style.visibility ="visible";
+			authremote.style.visibility ="hidden";
+		}
+		else
+		{
+			auth.style.visibility ="hidden";
+			authremote.style.visibility ="visible";
+		}
+		
+		xhr.abort();
+	};
+	xhr.onreadystatechange = function () {
+	    if (xhr.readyState != 4) return;
+	    	if (xhr.status == 200){
+			select.src = imgok;
+			auth.style.visibility ="hidden";
+        	}
+	    	if (xhr.status == 401){
+			select.src = imgnok;
+			auth.style.visibility ="visible";
+        	}  
+			clearTimeout(timeout);
+	};
+	var timeout=setTimeout(onTimeout,100);
+}
+
+function save_options() {
+  var select = document.getElementById("password");
+  localStorage["freebox_password"] = select.value;
+  select = document.getElementById("display_popup");
+  localStorage["freebox_display_popup"] = select.checked;
+  select = document.getElementById("url");
+  if (select.value != "")
+  {
+	localStorage["freeboxUrl"] = select.value;
+  }
+  else 
+  {
+	localStorage["freeboxUrl"] = "mafreebox.freebox.fr";
+  }
+  console.log(localStorage["freeboxUrl"]);
+  checkPassword();
+  
+  // Update status to let user know options were saved.
+  var status = document.getElementById("status");
+  status.innerHTML = "Options Saved.";
+  setTimeout(function() {
+    status.innerHTML = "";
+  }, 750);
+}
+
+// Restores select box state to saved value from localStorage.
+function restore_options() {
+  
+  var display_popup = localStorage["freebox_display_popup"];
+  if (!display_popup) 
+  {
+  		//setdefault
+  		localStorage["freebox_display_popup"] = true;
+  		display_popup = true;
+  	}
+  var select = document.getElementById("display_popup");
+  select.checked = eval(display_popup);
+  
+  
+  var url = localStorage["freeboxUrl"];
+  if (!url) {
+    return;
+  }
+  var select = document.getElementById("url");
+  select.value = url;
+  
+  
+  var pass = localStorage["freebox_password"];
+  if (!pass) {
+    return;
+  }
+  var select = document.getElementById("password");
+  select.value = pass;
+  checkPassword();
+}
+
+</script>
+
+<body onload="restore_options()">
+<font face="Arial">
+	<center>
+		<table>
+			<tr>
+				<td>
+					<img src="img/down.png"  width="32"/> 
+				</td>
+				<td>
+					<b>Download on my freebox</b>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td align="right">URL de la freebox pour l'accès à distance :</td>
+				<td><input type="text"  name="url" id="url">  </td>
+				<td> </td>
+			</tr>
+			<tr>
+				<td align="right">Mot de passe :</td>
+				<td><input type="password"  name="passwd" id="password"> </td>
+				<td> <img id="Check" name="Check" width="16"/> </td>
+			</tr>
+			<tr>
+				<td> </td>
+				<td><div id="err"/><font color="#FF0000"></font></div></td>
+			</tr>
+			
+		</table>
+
+<br>Démon transmission <img id="DCheck" name="DCheck" width="16"/> 
+<div id="auth"/>
+<a id="auth" name="auth" href="http://mafreebox.freebox.fr:9091/transmission/rpc"> authentification </a>
+(login:freebox, mdp: mot de passe freebox)
+</div>
+<div id="authremote"/>Le D&eacute;mon transmission n'est pas accessible en acc&egrave;s distant
+</div>
+<br>
+<input type="checkbox"  name="display_popup" id="display_popup"> Afficher les popups de fin de t&eacute;l&eacute;chargement
+<br>
+<br>
+<button onclick="save_options()">Save</button>
+<div id="status"/></div>
+</center>
+
+</font>
+</body>
+</html>
