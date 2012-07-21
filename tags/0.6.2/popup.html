@@ -1,0 +1,237 @@
+<head>
+<style>
+* {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+TABLE {
+	width: 500px;
+}
+.titre_dl {
+	cursor: help;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-weight: bold;
+	line-height: 14px;
+}
+H3 {
+	overflow: hidden;
+	white-space: nowrap;
+	outline: 0 !important;
+	font-weight: bold;
+	padding-top: 11px;
+}
+#links {
+	padding: 3px 0;
+	margin: 3px 0 0 0;
+	border: solid 1px #b6c7da;
+	background: url(img/bg_links.png) bottom left repeat-x;
+}
+#links A {
+	color: #000;
+	text-decoration: none;
+	padding: 4px 11px;
+}
+#links A.menu_actif {
+	background: url(img/a_on.png) center left repeat-x;
+	border: solid 1px #b6c7da;
+	border-radius: 3px;
+	padding: 3px 10px;
+}
+.td_dl_termine {
+	padding: 4px 0;
+	border-bottom: solid 1px #CCC;
+}
+.table_dl_encours {
+	float: right;
+}
+.td_dl_bas {
+	padding: 0 0 4px 0;
+	border-bottom: solid 1px #CCC;
+}
+.dl_fond {
+	height: 11px;
+	border: solid 1px #b2b2b2;
+	background: url(img/bg_progress.png) center left repeat-x;
+	overflow: hidden;
+	border-radius: 2px;
+}
+.dl_bar {
+	height: 11px;
+	background: url(img/progress_bar.png) center left repeat-x;
+}
+</style>
+<script src="js/fbcommon.js"></script>
+<script>
+
+// --------------------------------------- helper ------------------------------------
+
+
+function update()
+{
+	var path = "/download.cgi";
+	var params = "method=download.list";
+	
+	sendRequest(path, params, "application/x-www-form-urlencoded", buildInfo);
+}
+
+function sendControl(action, id, type) {
+	var path = "/download.cgi";
+	var params = '{"jsonrpc":"2.0","method":"download.'+ action +'","params":["'+ type +'",' + id + ']}';
+	
+	function sendControlResult() { 
+	   if (request.readyState == 4 && request.status == 200) {
+    	console.log( request.responseText );
+	}
+	} 
+	
+	console.log(params);
+	sendRequest(path, params, "application/json; charset=utf-8", sendControlResult);
+	update();
+}
+
+//------------------------------------------------------------- call from html ------------------------------
+
+function show(status)
+{
+	localStorage["filter"] = status;
+	buildInfo();
+}
+function onload()
+{	
+	
+	function onLogin()
+	{	
+		setInterval(update,3000);
+		var filter = localStorage["filter"];
+		if (!filter) show("done,seeding");
+		update();
+		
+	}
+	
+	login(onLogin);
+}
+
+
+
+//---------------------------------------------- Presentation ------------------------------------------------
+
+function buildControl(file){
+	var cmd = "";
+	var img = "";
+	if (file.status == "running"){
+		cmd="stop";
+		img="img/stop.png";
+	}
+	else if (file.status == "paused"){
+		cmd="start";
+		img="img/start.png";
+	}
+	else{
+		cmd="remove";
+		img="img/remove.png";
+	}
+	var html =''
+	if ("done,seeding".indexOf(file.status)<0){
+		html += '<a href="" onclick=\'sendControl("'+ cmd + '", ' + file.id + ', "' +file.type +'");\'>';
+		html +=  "<img src='" + img + "' /></a>";
+	}
+	
+	html += '<a href="" onclick=\'sendControl("remove", ' + file.id + ', "' +file.type +'");\'>';
+	html +=  "<img src='img/remove.png' /></a>";
+	return html;
+}
+
+function buildInfo(){
+	var selectseed = document.getElementById("seedbox");
+	selectseed.href=buildURL("/download.php");
+	if (xh.readyState == 4 && xh.status == 200) {
+		var res = eval("(" + xh.responseText + ")");
+		var size = 0;
+		var activeCount = 0;
+		var downloadCount = 0;
+		var active = "";
+		for (i in res.result){
+			var file = res.result[i];
+			
+			if (localStorage["filter"].indexOf(file.status)>=0){
+			
+				if (file.name.length > size) size = file.name.length;
+				var finished = file.transferred / file.size * 100;
+				finished = Math.round(finished);
+				
+				if(file.rx_rate > 0) {
+					var reste_a_dl = file.size - file.transferred;
+					var temps = Math.round(reste_a_dl / file.rx_rate);
+					temps = secondsToTime(temps);
+				}
+				else {
+					temps = "";
+				}
+				
+				if (localStorage["filter"] != "done,seeding") {
+				
+					document.getElementById("encours").className = "menu_actif";
+					if ( file.rx_rate > 1000000 ){
+						speed = Math.round(100 * file.rx_rate / 1000000) / 100 + " Mo/s";
+					}else{
+						speed = Math.round(file.rx_rate / 1000) + " Ko/s";
+					}
+					active += "<tr>";
+						active += "<td><a class='titre_dl' title=\"" + file.name + "\">" + file.name + "</a> </td>";
+					active += '</tr>';
+					active += '<tr>';
+						if (file.status != "paused"){
+							active += '<td align="left"> ' + finished + "% (" + speed + ") - " + temps +"</td>";
+						} else {
+							active += '<td align="left"> ' + finished + "% - pause</td>";
+						}//active += '<td align="right" width="75"> ' + speed + "</td>";
+						//active += '<td align="right" width="75"> ' + temps + "</td>";
+						active += '<td align="right" width="35">' + buildControl(file) + '</td>';
+					active += '</tr>';
+					active += '<tr>';
+						active += "<td colspan='5' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div></td>";
+					active += '</tr>';
+				}
+				else {
+				
+					document.getElementById("termines").className = "menu_actif";
+					active += "<tr>";
+						active += "<td class='td_dl_termine'>" + file.name + ' </td>'
+						active += '<td align="right" width="20">' + buildControl(file) + '</td>';
+					active += "</tr>";
+				}
+			}
+			if ("done,seeding".indexOf(file.status)>=0)  
+					downloadCount +=1;
+			else
+					activeCount += 1;
+			
+		}
+		active = '<center><table width="100%">'+active;
+		active += "</table></center>";
+		var encours = document.getElementById("encours");
+		encours.innerHTML = "En cours(" + activeCount +")";
+		
+		var termines = document.getElementById("termines");
+		termines.innerHTML = "T&eacute;l&eacute;charg&eacute;s(" + downloadCount +")";
+		
+		var select = document.getElementById("bots");
+		select.innerHTML=active;		
+		
+	}
+}
+
+</script>
+</style>
+</head>
+<body onLoad="onload()">
+<div id="links">
+<table width="400"><tr><td>
+<a href="" onclick='show("running,paused");menu("encours");' id='encours'>En cours</a>
+<a href="" onclick='show("done,seeding");menu("termines");' id='termines'>T&eacute;l&eacute;charg&eacute;s</a>
+<a id="seedbox" href="http://mafreebox.freebox.fr/download.php" target="_blank">Seedbox</a> 
+</td></tr></table>
+</div>
+<div id="bots">.</div>
+</body>
