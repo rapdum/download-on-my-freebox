@@ -34,7 +34,7 @@ function dispatchTorrent( url)
 	};
 	
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
+	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", getPassword());
 	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
 	xhr.send('{"method": "torrent-get" }');
 	xhr.onreadystatechange = function () {
@@ -191,7 +191,7 @@ function uploadTorrent (data, torrent) {
 	
 	console.log("Upload Torrent");
 	var xhr = new XMLHttpRequest();
-	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", localStorage["freebox_password"]);
+	xhr.open('POST', freeboxUrl + ":9091/transmission/rpc", true, "freebox", getPassword());
 	xhr.setRequestHeader('X-Transmission-Session-Id', localStorage.sessionId);
 	xhr.send('{ "arguments": { "metainfo": "' + data + '" }, "method": "torrent-add" }');
 	xhr.onreadystatechange = function () {

@@ -29,9 +29,23 @@ function buildURL(path)
 	return  freeboxUrl + path;
 }
 
+function storePassword(val)
+{	
+	var encrypt = 'Download on my freebox is neat';
+	var cipheredPass = Aes.Ctr.encrypt(val, encrypt, 256);
+	localStorage["freebox_password"] = cipheredPass;
+}
+
+function getPassword()
+{
+	var encrypt = 'Download on my freebox is neat';
+	var cipheredPass = localStorage["freebox_password"];
+	return Aes.Ctr.decrypt(cipheredPass, encrypt, 256);
+}
+
 function login( cb ){
 
-  var pass = localStorage["freebox_password"];
+  var pass = getPassword();
   var params = "login=freebox&passwd=" + encodeURIComponent(pass);
   console.log( "Essai de login sur "+ buildURL("/login.php"));
   var xh = new XMLHttpRequest();
