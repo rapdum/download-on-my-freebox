@@ -1,13 +1,18 @@
 <html>
 <head><title>Download on my freebox</title></head>
+<script src="js/aes.js"></script>
 <script src="js/fbcommon.js"></script>
 <script type="text/javascript">
 
 var imgok = "img/ok.png";
 var imgnok = "img/nok.png";
+var encrypt = 'Download on my freebox is neat';
+
 
 function checkPassword(){
-  var pass = localStorage["freebox_password"];
+  
+  var pass = getPassword();
+  console.log(pass);
   
   function loginCB(ok){
 	  var select = document.getElementById("Check");
@@ -28,7 +33,7 @@ function checkPassword(){
 	var auth = document.getElementById("auth");
 	var authremote = document.getElementById("authremote");
 	console.log(buildURL(":9091/transmission/rpc"));
-	xhr.open('POST', buildURL(":9091/transmission/rpc"), true, "freebox", localStorage["freebox_password"]);
+	xhr.open('POST', buildURL(":9091/transmission/rpc"), true, "freebox", pass);
 	xhr.send('{}');
 	
 	authremote.style.visibility ="hidden";
@@ -65,7 +70,7 @@ function checkPassword(){
 
 function save_options() {
   var select = document.getElementById("password");
-  localStorage["freebox_password"] = select.value;
+  storePassword(select.value);
   select = document.getElementById("display_popup");
   localStorage["freebox_display_popup"] = select.checked;
   select = document.getElementById("url");
@@ -110,7 +115,7 @@ function restore_options() {
   select.value = url;
   
   
-  var pass = localStorage["freebox_password"];
+  var pass = getPassword();
   if (!pass) {
     return;
   }
