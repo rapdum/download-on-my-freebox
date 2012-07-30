@@ -25,7 +25,7 @@ console.log("Freebox URL :" + freeboxUrl);
 function buildURL(path)
 {
 	freeboxUrl = "http://" + localStorage["freeboxUrl"];
-	if (freeboxUrl === "") freeboxUrl="http://mafreebox.frebox.fr";
+	if (freeboxUrl === "http://") freeboxUrl="http://mafreebox.freebox.fr";
 	return  freeboxUrl + path;
 }
 
