@@ -136,6 +136,13 @@ function downloadTransmissionTorrent (url) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, true);
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
+	/*xhr.responseType = "blob";  future use of blob
+	xhr.onload = function(ev) {
+		console.log("Create Blob");
+		encodeTorrent(xhr.response, function (data, torrent) {
+					uploadTorrent(data, torrent);
+					})
+	};*/
 	xhr.responseType = "arraybuffer";
 	
 	xhr.onload = function(ev) {
@@ -176,8 +183,11 @@ function encodeTorrent (file, callback) {
 			//encode data that gonna be transmited
 			var reader = new FileReader();
 			reader.onload = function (ev) {
-				var data = reader.result.replace("data:application/x-bittorrent;base64,", "").replace("data:base64,", "");
-				callback(data, torrent);
+			data = reader.result;
+			l = data.length;
+			p = reader.result.indexOf("base64,") + 7;
+			data = data.substring(p, l);
+			callback(data, torrent);
 			}
 			reader.readAsDataURL(file);
 		}else{
