@@ -46,7 +46,7 @@ function checkFinished(){
 	   {
 			clearTimeout(timeout);
 			console.log("checked!")
-			var res = eval("(" + xh.responseText + ")");
+			var res = JSON.parse( xh.responseText );
 			var active = ""
 			newNotDone ="";
 			for (i in res.result)
