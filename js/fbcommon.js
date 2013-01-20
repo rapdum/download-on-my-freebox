@@ -71,7 +71,7 @@ function login( cb ){
    if (xh.readyState != 4) {return;}
       clearTimeout(xmlHttpTimeout);
        if (xh.status == 200){      
-       		var jsondata=eval("("+xh.responseText+")");
+       		var jsondata=JSON.parse(xh.responseText);
        		jsondata.error = translateErrorCode(jsondata.errcode,"Mauvais mot de passe");
 			if (jsondata.result) jsondata.error = "";
 			console.log(jsondata);
