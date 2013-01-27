@@ -92,9 +92,9 @@ function changeReasons(){
 			localStorage["restore count"]=0;
 		}
 	phrases = ["Aujourd'hui, je me sens l'ame g&eacute;n&eacute;reuse :",
-				"Envie, d'un peu de m&eacute;c&eacute;nat :",
+				"Envie d'un peu de m&eacute;c&eacute;nat :",
 				"J'ai trop d'argent :",
-				"Parce que le d&eacute;veloppeur &agrave; besoin de changer ces fenetres :",
+				"Parce que le d&eacute;veloppeur a besoin de changer ses fenetres :",
 				"Sans raison :",
 				"J'ai trop d'argent :"];
 	
