@@ -19,6 +19,7 @@ function checkPassword(){
 		err.innerText=ok.error;
 		}
 	}
+	console.log("Verification des params de connexion");
 	login( loginCB);
 	var xhr = new XMLHttpRequest();
 	
