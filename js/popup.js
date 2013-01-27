@@ -4,7 +4,7 @@
 function update()
 {
 	var path = "/download.cgi";
-	var params = "method=download.list"+ "&csrf_token=" + localStorage["token"];
+	var params = "method=download.list"+ "&csrf_token=" + encodeURIComponent(localStorage["token"]);
 	
 	sendRequest(path, params, "application/x-www-form-urlencoded", buildInfo);
 }
@@ -16,9 +16,8 @@ function sendControl(action, id, type) {
 	function sendControlResult() { 
 	   if (request.readyState == 4 && request.status == 200) {
     	console.log( request.responseText );
-	}
+		}
 	} 
-	
 	console.log(params);
 	sendRequest(path, params, "application/json; charset=utf-8", sendControlResult);
 	update();
@@ -49,6 +48,11 @@ function onload()
 	
 	document.getElementById("encours").addEventListener("click",show_encours);
 	document.getElementById("termines").addEventListener("click",show_termines);
+	var select = document.getElementById("options");
+	url = chrome.extension.getURL("options.html");
+	msg = "<a target='_blank' href='"+ url +"'>Options</a>" ;
+	select.innerHTML = msg;
+	
 	function onLogin()
 	{	
 		setInterval(update,3000);
@@ -58,7 +62,7 @@ function onload()
 		
 	}
 	update();
-	//login(onLogin);
+	login(onLogin);
 }
 
 
@@ -191,5 +195,13 @@ function buildInfo(){
 		};
 		
 	}
+	if (xh.status == 403){
+		var select = document.getElementById("bots");
+		url = chrome.extension.getURL("options.html");
+		msg = "Veuillez v&eacute;rifier les parametres de configurations:";
+		msg += "<br>"
+		msg += "<a target='_blank' href='"+ url +"'>Options</a>" ;
+		select.innerHTML = msg;
+		}
 }
 window.addEventListener("load", onload);
