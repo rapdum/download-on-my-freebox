@@ -1,0 +1,67 @@
+<html>
+<head><title>Download on my freebox</title></head>
+<script src="js/aes.js"></script>
+<script src="js/fbcommon.js"></script>
+<script src="js/options.js"></script>
+
+<body >
+<font face="Arial">
+	<center>
+		<table>
+			<tr>
+				<td>
+					<img src="img/down.png"  width="32"/> 
+				</td>
+				<td>
+					<b>Download on my freebox</b>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td align="right">URL de la freebox pour l'accès à distance :</td>
+				<td><input type="text"  name="url" id="url">  </td>
+				<td> </td>
+			</tr>
+			<tr>
+				<td align="right">Mot de passe :</td>
+				<td><input type="password"  name="passwd" id="password"> </td>
+				<td> <img id="Check" name="Check" width="16"/> </td>
+			</tr>
+			<tr>
+				<td> </td>
+				<td><div id="err"/><font color="#FF0000"></font></div></td>
+			</tr>
+			
+		</table>
+
+<br>Démon transmission <img id="DCheck" name="DCheck" width="16"/> 
+<div id="auth"/>
+<a id="auth" name="auth" href="http://mafreebox.freebox.fr:9091/transmission/rpc"> authentification </a>
+(login:freebox, mdp: mot de passe freebox)
+</div>
+<div id="authremote"/>Le D&eacute;mon transmission n'est pas accessible en acc&egrave;s distant
+</div>
+<br>
+<input type="checkbox"  name="display_popup" id="display_popup"> Afficher les popups de fin de t&eacute;l&eacute;chargement
+<br>
+<br>
+<button id="btn_save">Save</button>
+<div id="status"/></div>
+<br>
+<br>
+<div id="reasons"/></div>  
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
+">
+<input type="image" src="https://www.paypalobjects.com/fr_FR/FR/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - la solution de paiement en ligne la plus simple et la plus sécurisée !">
+<img alt="" border="0" src="https://www.paypalobjects.com/fr_FR/i/scr/pixel.gif" width="1" height="1">
+</form>
+</center>
+
+</font>
+
+
+</body>
+</html>
