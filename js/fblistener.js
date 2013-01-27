@@ -26,11 +26,10 @@ function onload()
 function checkFinished(){
   var notDone = localStorage["notDone"];
   if (!notDone) notDone="";
-  console.log("checking for new download");
+  console.log("Checking for new download");
   var freeboxUrl = "http://" + localStorage["freeboxUrl"];
   var xh = new XMLHttpRequest();
-  var params = "method=download.list" + "&csrf_token=" + localStorage["token"];
-  
+  var params = "method=download.list" + "&csrf_token=" + encodeURIComponent(localStorage["token"]);
   xh.open("POST", freeboxUrl + "/download.cgi", true);  
   xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
