@@ -77,7 +77,6 @@ function login( cb ){
        		var jsondata=JSON.parse(xh.responseText);
        		jsondata.error = translateErrorCode(jsondata.errcode,"Mauvais mot de passe");
 			if (jsondata.result) jsondata.error = "";
-			console.log(jsondata);
 			cb(jsondata);
 	   }  
 	   result.error = translateErrorCode(xh.status, xh.statusText);
