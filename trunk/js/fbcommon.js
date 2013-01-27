@@ -68,9 +68,12 @@ function login( cb ){
   xh.onreadystatechange=function(){
   var result=new Object();
   result.result = false;
+  console.log(xh);
    if (xh.readyState != 4) {return;}
       clearTimeout(xmlHttpTimeout);
        if (xh.status == 200){      
+			localStorage["token"] = xh.getResponseHeader("X-FBX-CSRF-Token");
+			console.log("token retrieved:" + localStorage["token"]);
        		var jsondata=JSON.parse(xh.responseText);
        		jsondata.error = translateErrorCode(jsondata.errcode,"Mauvais mot de passe");
 			if (jsondata.result) jsondata.error = "";

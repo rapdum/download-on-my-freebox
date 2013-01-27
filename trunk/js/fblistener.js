@@ -29,7 +29,8 @@ function checkFinished(){
   console.log("checking for new download");
   var freeboxUrl = "http://" + localStorage["freeboxUrl"];
   var xh = new XMLHttpRequest();
-  var params = "method=download.list";
+  var params = "method=download.list" + "&csrf_token=" + localStorage["token"];
+  
   xh.open("POST", freeboxUrl + "/download.cgi", true);  
   xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
