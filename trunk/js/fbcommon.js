@@ -19,13 +19,15 @@
  
  // ------------------------------------- ----------------------------------------------
 var xh = new XMLHttpRequest();
-var freeboxUrl = "http://" + localStorage["freeboxUrl"];
+
+var freeboxUrl = buildURL("");
 console.log("Freebox URL :" + freeboxUrl);
 
 function buildURL(path)
 {
+	if (!localStorage["freeboxUrl"]) localStorage["freeboxUrl"] = "mafreebox.freebox.fr";
 	freeboxUrl = "http://" + localStorage["freeboxUrl"];
-	if (freeboxUrl === "http://") freeboxUrl="http://mafreebox.freebox.fr";
+	if (freeboxUrl === "http://" ) freeboxUrl="http://mafreebox.freebox.fr";
 	return  freeboxUrl + path;
 }
 
