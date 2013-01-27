@@ -15,6 +15,11 @@
   "options_page": "options.html",
   "background":  {
     "page":"background.html"
-  }
+  },
+  "web_accessible_resources": [
+    "img/down.png",
+    "img/ok.png",
+    "img/nok.png"
+  ]
 }
 

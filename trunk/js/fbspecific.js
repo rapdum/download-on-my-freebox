@@ -21,7 +21,7 @@ function notif(img,title,txt, timeout)
 {
 	if (window.webkitNotifications){
 		var notification = webkitNotifications.createNotification(
-			    img,  // icon url - can be relative
+			    chrome.extension.getURL(img),  // icon url - can be relative
 			    title,  // notification title
 			    txt  // notification body text
 				);
