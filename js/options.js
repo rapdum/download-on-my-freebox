@@ -81,16 +81,31 @@ function save_options() {
   
   // Update status to let user know options were saved.
   var status = document.getElementById("status");
-  status.innerHTML = "Options Saved.";
+  status.innerHTML = "Options Sauvegard&eacute;es.";
+  changeReasons();
   setTimeout(function() {
     status.innerHTML = "";
   }, 750);
 }
-
+function changeReasons(){
+	if (!localStorage["restore count"]) {
+			localStorage["restore count"]=0;
+		}
+	phrases = ["Aujourd'hui, je me sens l'ame g&eacute;n&eacute;reuse :",
+				"Envie, d'un peu de m&eacute;c&eacute;nat :",
+				"J'ai trop d'argent :",
+				"Parce que le d&eacute;veloppeur &agrave; besoin de changer ces fenetres :",
+				"Sans raison :",
+				"J'ai trop d'argent :"];
+	
+	count = parseInt(localStorage["restore count"]);
+	document.getElementById("reasons").innerHTML = phrases[count%phrases.length];
+	localStorage["restore count"] = count + 1;
+}
 // Restores select box state to saved value from localStorage.
 function restore_options() {
-
-document.getElementById("btn_save").addEventListener("click",save_options);
+    changeReasons();
+	document.getElementById("btn_save").addEventListener("click",save_options);
   
   var display_popup = localStorage["freebox_display_popup"];
   if (!display_popup) 
