@@ -54,11 +54,12 @@ function dispatchDownload(url){
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 3) {
-			console.log(xhr);
-			if (xhr.getResponseHeader("Content-Type") == "application/x-bittorrent") {
+			console.log("Searching type of file to download"); 
+			var torrentString = "d8:announce";
+			if (xhr.response.substring(0, torrentString.length) === torrentString) {
 				xhr.abort();
 				dispatchTorrent(url);
-				}
+			}
 			else{
 				xhr.abort();
 				downloadFreeHTTP(url);	
@@ -99,7 +100,7 @@ function download(url){
 }
 
 function downloadFree(url,method, message){
-	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=" + method;
+	var params = "url=" + encodeURIComponent(url) + "&user=freebox" + "&method=" + method + "&csrf_token=" + encodeURIComponent(localStorage["token"]);
     var xh = new XMLHttpRequest();
   	xh.open("POST", buildURL("/download.cgi"), false);  
   	xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -136,24 +137,14 @@ function downloadTransmissionTorrent (url) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, true);
 	xhr.overrideMimeType('text/plain; charset=x-user-defined');
-	/*xhr.responseType = "blob";  future use of blob
-	xhr.onload = function(ev) {
-		console.log("Create Blob");
-		encodeTorrent(xhr.response, function (data, torrent) {
-					uploadTorrent(data, torrent);
-					})
-	};*/
+	
 	xhr.responseType = "arraybuffer";
 	
 	xhr.onload = function(ev) {
 	
 		console.log("Create Blob");
-		if(typeof(window.BlobBuilder) === "undefined")
-			BlobBuilder = window.WebKitBlobBuilder;
-	    var blob = new BlobBuilder();
-	    blob.append(xhr.response);
-	    
-		encodeTorrent(blob.getBlob(), function (data, torrent) {
+	    var blob = new Blob([new Uint8Array(xhr.response)]);
+		encodeTorrent(blob, function (data, torrent) {
 					uploadTorrent(data, torrent);
 					})
 	};
@@ -220,7 +211,6 @@ function uploadTorrent (data, torrent) {
         	} 
 	    }
 	};
-
 }
 
 
