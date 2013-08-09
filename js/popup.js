@@ -114,6 +114,11 @@ function buildInfo(){
 		var active = "";
 		for (i in res.result){
 			var file = res.result[i];
+			// moche moche moche mais bon, les status ont changés!
+			if (file.transferred == file.size)
+			{
+				file.status = "done"; 
+			}
 			
 			if (localStorage["filter"].indexOf(file.status)>=0){
 			
