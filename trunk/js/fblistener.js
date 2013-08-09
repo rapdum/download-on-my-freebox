@@ -53,7 +53,7 @@ function checkFinished(){
 			{
 				var file = res.result[i];
 				
-				if (file.status!='done' && file.status!="seeding")
+				if (file.transferred != file.size)
 				{
 					newNotDone +="$"+ file.name+"$";
 				}
