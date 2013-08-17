@@ -27,14 +27,11 @@ function checkFinished(){
   var notDone = localStorage["notDone"];
   if (!notDone) notDone="";
   console.log("Checking for new download");
-  var freeboxUrl = "http://" + localStorage["freeboxUrl"];
   var xh = new XMLHttpRequest();
-  var params = "method=download.list" + "&csrf_token=" + encodeURIComponent(localStorage["token"]);
-  xh.open("POST", freeboxUrl + "/download.cgi", true);  
-  xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
-  
-  xh.send(params);
+  xh.open("GET", buildURL("downloads/"), true);  
+  xh.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+  xh.send();
+
   function onTimeout(){
 		console.log("checkFinished timeout");
 		xh.abort();
@@ -45,15 +42,13 @@ function checkFinished(){
 	   if (xh.status == 200) /* 200 : code HTTP pour OK */
 	   {
 			clearTimeout(timeout);
-			console.log("checked!")
 			var res = JSON.parse( xh.responseText );
 			var active = ""
 			newNotDone ="";
 			for (i in res.result)
 			{
 				var file = res.result[i];
-				
-				if (file.transferred != file.size)
+				if (file.status != "seeding" && file.status != "done" )
 				{
 					newNotDone +="$"+ file.name+"$";
 				}
@@ -75,7 +70,9 @@ function checkFinished(){
 				console.log("login failed");
 				}
 			}	
-			login(cb);
+			
+			clearTimeout(timeout);
+			get_session(cb);
 		}         
 	};
 	var timeout=setTimeout(onTimeout,1000);			

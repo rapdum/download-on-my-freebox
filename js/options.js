@@ -1,70 +1,102 @@
 var imgok = "img/ok.png";
 var imgnok = "img/nok.png";
 var encrypt = 'Download on my freebox is neat';
+var track_id;
+
+function loginCB(ok)
+{
+	var select = document.getElementById("Check");
+	var err = document.getElementById("err");
+	if (ok)
+	{
+		select.src = imgok;
+	}
+	else
+	{
+		select.src = imgnok;
+	}
+}
 
 
 function checkPassword(){
+	get_session( loginCB );
+	build_remote_conf();
+}
+
+	
+
+function requestAppToken(){
   
-  var pass = getPassword();
-  
-  function loginCB(ok){
-	  var select = document.getElementById("Check");
-	  var err = document.getElementById("err");
-	  if (ok.result) {
-		select.src = imgok;
-		err.innerText="";
-	  }
-	  else {
-		select.src = imgnok;
-		err.innerText=ok.error;
-		}
-	}
-	console.log("Verification des params de connexion");
-	login( loginCB);
+	console.log("Verification des nouvelles API");
 	var xhr = new XMLHttpRequest();
-	
-    select = document.getElementById("DCheck");
-	var auth = document.getElementById("auth");
-	var authremote = document.getElementById("authremote");
-	console.log(buildURL(":9091/transmission/rpc"));
-	xhr.open('POST', buildURL(":9091/transmission/rpc"), true, "freebox", pass);
-	xhr.send('{}');
-	
-	authremote.style.visibility ="hidden";
-	function onTimeout(){
-		
-		select.src = imgnok;
-		if (localStorage["freeboxUrl"] == "mafreebox.freebox.fr")
-		{	
-		    auth.style.visibility ="visible";
-			authremote.style.visibility ="hidden";
-		}
-		else
-		{
-			auth.style.visibility ="hidden";
-			authremote.style.visibility ="visible";
-		}
-		
-		xhr.abort();
-	};
+	xhr.open('POST', buildURL("login/authorize/"), true);
+	xhr.send('{"app_id": "fr.freebox.domf", "app_name": "Download on my freebox","app_version": "0.8.0","device_name": "Chrome"}');
+	var app_token ="";
 	xhr.onreadystatechange = function () {
 	    if (xhr.readyState != 4) return;
 	    	if (xhr.status == 200){
-			select.src = imgok;
-			auth.style.visibility ="hidden";
+				var res = JSON.parse( xhr.responseText );
+				app_token = res.result.app_token;
+				track_id=res.result.track_id;
+				console.log("Waiting to be accepted");
         	}
 	    	if (xhr.status == 401){
-			select.src = imgnok;
-			auth.style.visibility ="visible";
         	}  
-			clearTimeout(timeout);
 	};
-	var timeout=setTimeout(onTimeout,100);
+	var refreshIntervalId;
+	function checkAcceptance()
+	{
+		xhr = new XMLHttpRequest();
+		xhr.open('get', buildURL("login/authorize/"+track_id), true);
+		xhr.send();
+
+		xhr.onreadystatechange = function () {
+		if (xhr.readyState != 4) return;
+			if (xhr.status == 200){
+				var res = JSON.parse( xhr.responseText );
+				display_registration(res.result.status);
+				if ( res.result.status != "pending")
+				{
+					clearInterval(refreshIntervalId);
+					if ( res.result.status == "granted" )
+					{
+						select = document.getElementById("token");
+						select.value = app_token;
+						localStorage["app_token"] = app_token;
+						localStorage["track_id"] = track_id;
+						get_session();
+						
+					}
+					else
+					{
+						select = document.getElementById("token");
+						select.value = "";
+						localStorage["app_token"] = "";
+						localStorage["track_id"] = "";
+					}
+					console.log("Application " + res.result.status);
+				}
+			}  
+		};
+	}
+	refreshIntervalId = setInterval(checkAcceptance, 1000);
+}
+
+function display_registration(status)
+{	
+	select = document.getElementById("registration_status");
+	if (status == "pending")
+	{
+		document.getElementById("btn_register").disabled = true;
+		select.innerText = "Veuillez accepter sur le freebox Server...";
+		return;
+	}
+	document.getElementById("btn_register").disabled = false;
+	select.innerText = status;
+
 }
 
 function save_options() {
-  var select = document.getElementById("password");
-  storePassword(select.value);
   select = document.getElementById("display_popup");
   localStorage["freebox_display_popup"] = select.checked;
   select = document.getElementById("url");
@@ -77,6 +109,8 @@ function save_options() {
 	localStorage["freeboxUrl"] = "mafreebox.freebox.fr";
   }
   console.log(localStorage["freeboxUrl"]);
+  select = document.getElementById("token");
+  localStorage["app_token"] = select.value;
   checkPassword();
   
   // Update status to let user know options were saved.
@@ -106,6 +140,7 @@ function changeReasons(){
 function restore_options() {
     changeReasons();
 	document.getElementById("btn_save").addEventListener("click",save_options);
+	document.getElementById("btn_register").addEventListener("click",requestAppToken);
   
   var display_popup = localStorage["freebox_display_popup"];
   if (!display_popup) 
@@ -118,6 +153,9 @@ function restore_options() {
   console.log(display_popup);
   select.checked = (display_popup === 'true');
   
+  select = document.getElementById("token");
+  select.value = localStorage["app_token"];
+  
   
   var url = localStorage["freeboxUrl"];
   if (!url) {
@@ -127,12 +165,6 @@ function restore_options() {
   select.value = url;
   
   
-  var pass = getPassword();
-  if (!pass) {
-    return;
-  }
-  var select = document.getElementById("password");
-  select.value = pass;
   checkPassword();
 }
 

@@ -1,6 +1,7 @@
 <html>
 <head><title>Download on my freebox</title></head>
 <script src="js/aes.js"></script>
+<script src="js/hmac-sha1.js"></script>
 <script src="js/fbcommon.js"></script>
 <script src="js/options.js"></script>
 
@@ -20,28 +21,19 @@
 		<table>
 			<tr>
 				<td align="right">URL de la freebox pour l'accès à distance :</td>
-				<td><input type="text"  name="url" id="url">  </td>
-				<td> </td>
-			</tr>
-			<tr>
-				<td align="right">Mot de passe :</td>
-				<td><input type="password"  name="passwd" id="password"> </td>
+				<td><input type="text"  name="url" id="url" width="200">  </td>
 				<td> <img id="Check" name="Check" width="16"/> </td>
+				<td><button id="btn_register">Enregistrer le plugin</button>  </td>
+				<td> </td>
 			</tr>
 			<tr>
-				<td> </td>
-				<td><div id="err"/><font color="#FF0000"></font></div></td>
+				<td align="right">Token :</td>
+				<td><input type="text"  name="token" id="token"  width="200">  </td>
+				<td colspan=2><div id="registration_status"/></div></td>
 			</tr>
 			
 		</table>
 
-<br>Démon transmission <img id="DCheck" name="DCheck" width="16"/> 
-<div id="auth"/>
-<a id="auth" name="auth" href="http://mafreebox.freebox.fr:9091/transmission/rpc"> authentification </a>
-(login:freebox, mdp: mot de passe freebox)
-</div>
-<div id="authremote"/>Le D&eacute;mon transmission n'est pas accessible en acc&egrave;s distant
-</div>
 <br>
 <input type="checkbox"  name="display_popup" id="display_popup"> Afficher les popups de fin de t&eacute;l&eacute;chargement
 <br>

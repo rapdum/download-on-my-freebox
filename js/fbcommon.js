@@ -18,91 +18,139 @@
  */
  
  // ------------------------------------- ----------------------------------------------
-var xh = new XMLHttpRequest();
 
 var freeboxUrl = buildURL("");
+var CODE_PHRASE = "Download on my freebox is neat";
+
 console.log("Freebox URL :" + freeboxUrl);
+
+function remove_cookie()
+{
+	chrome.cookies.getAll({}, function(cookies) {
+		for(var i=0; i<cookies.length;i++) {
+			if ( cookies[i].name === "FREEBOXOS")
+			{
+				console.log("Remove Freebox OS cookie");
+				chrome.cookies.remove({ url: "http://" + cookies[i].domain + cookies[i].path, name: cookies[i].name});
+			}
+		}
+	});
+}
 
 function buildURL(path)
 {
-	if (!localStorage["freeboxUrl"]) localStorage["freeboxUrl"] = "mafreebox.freebox.fr";
-	freeboxUrl = "http://" + localStorage["freeboxUrl"];
-	if (freeboxUrl === "http://" ) freeboxUrl="http://mafreebox.freebox.fr";
-	return  freeboxUrl + path;
+	if (!localStorage["freeboxUrl"]) 
+		localStorage["freeboxUrl"] = "mafreebox.freebox.fr";
+	freeboxUrl = "http://" + localStorage["freeboxUrl"] ;
+	if (freeboxUrl === "http://" ) 
+		freeboxUrl="http://mafreebox.freebox.fr";
+	var api = "/api/v1/"
+	return  freeboxUrl + api + path;
 }
 
-function storePassword(val)
+function storeToken(val)
 {	
-	var encrypt = 'Download on my freebox is neat';
-	var cipheredPass = Aes.Ctr.encrypt(val, encrypt, 256);
-	localStorage["freebox_password"] = cipheredPass;
+	var cipheredPass = Aes.Ctr.encrypt(val, CODE_PHRASE, 256);
+	localStorage["app_token"] = cipheredPass;
 }
 
-function getPassword()
+function getToken()
 {
-	var encrypt = 'Download on my freebox is neat';
-	var cipheredPass = localStorage["freebox_password"];
-	return Aes.Ctr.decrypt(cipheredPass, encrypt, 256);
+	var cipheredPass = localStorage["app_token"];
+	return Aes.Ctr.decrypt(cipheredPass, CODE_PHRASE, 256);
 }
 
-function login( cb ){
-
-  var pass = getPassword();
-  var params = "login=freebox&passwd=" + encodeURIComponent(pass);
-  console.log( "Essai de login sur "+ buildURL("/login.php"));
-  var xh = new XMLHttpRequest();
-
-  xh.open("POST", buildURL("/login.php"), true);
-  xh.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
-  
-  function ajaxTimeout(){
-	xh.abort();
-	var result=new Object();
-	result.result = false;
-	result.error = "Le temps pour se connecté est dépassé";
-	console.log(result);
-	cb(result);
+function build_remote_conf()
+{
+	function encode_line(conf)
+	{
+		var url = conf.remote_access_ip + ":" +conf.remote_access_port;
+		var decrypted = url + "|domf|" + localStorage["app_token"];
+		var encrypted = Aes.Ctr.encrypt(decrypted, CODE_PHRASE, 256);
 	}
-
-  
-  
-  xh.onreadystatechange=function(){
-  var result=new Object();
-  result.result = false;
-  console.log(xh);
-   if (xh.readyState != 4) {return;}
-      clearTimeout(xmlHttpTimeout);
-       if (xh.status == 200){      
-			localStorage["token"] = xh.getResponseHeader("X-FBX-CSRF-Token");
-			console.log("token retrieved:" + localStorage["token"]);
-       		var jsondata=JSON.parse(xh.responseText);
-       		jsondata.error = translateErrorCode(jsondata.errcode,"Mauvais mot de passe");
-			if (jsondata.result) jsondata.error = "";
-			cb(jsondata);
-	   }  
-	   result.error = translateErrorCode(xh.status, xh.statusText);
-   }
-  	xh.send(params);
-	var xmlHttpTimeout=setTimeout(ajaxTimeout,3000);
+	get_config(encode_line);
 }
-
-
-function sendRequest(path, params, contentType, callback)
+function get_config( callback )
 {
-	xh.open("POST", freeboxUrl + path, false);  
-	xh.setRequestHeader("Content-Type", contentType);
-	xh.setRequestHeader("X-Requested-With","XMLHttpRequest");
-	xh.onreadystatechange = callback;
-	xh.send(params);
+	var xhrconf = new XMLHttpRequest();
+	console.log("Checking config");
+	xhr.open('get', buildURL("connection/config/"), true);
+	xhr.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+	xhr.send();
+	xhr.onreadystatechange = function () {
+	if (xhr.readyState != 4) return;
+		if (xhr.status == 200){
+			var conf = JSON.parse( xhr.responseText );
+			if (typeof(callback)!=='undefined')
+				callback(conf.result);
+		}  
+	};
+}
+function get_session(callback)
+{
+	xhr = new XMLHttpRequest();
+	console.log("Checking session");
+	xhr.open('get', buildURL("login/"), true);
+	xhr.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+	xhr.send();
+	var challenge;
+	var retry = 2;
+	xhr.onreadystatechange = function () {
+	if (xhr.readyState != 4) return;
+		if (xhr.status == 200){
+			var res = JSON.parse( xhr.responseText );
+			challenge = res.result.challenge;
+			if ( res.result.logged_in == false)
+			{
+				console.log("Not loggedin.");
+				retrieve(challenge, callback);
+			}
+			else
+			{
+				console.log("Already loggedin");
+				if (typeof(callback)!=='undefined')
+					callback(true);
+			}
+		}  
+	};
+	function retrieve(challenge, callback)
+	{
+		var xhr = new XMLHttpRequest();
+		console.log("Ask for new session with : " );
+		console.log("  - app_token : " + localStorage["app_token"]);
+		console.log("  - challenge : " + challenge);
+		
+		var hash = CryptoJS.HmacSHA1(challenge, localStorage["app_token"]);
+		console.log("  --> hash : " + hash);
+		
+		xhr.open('POST', buildURL("login/session/"), true);
+		xhr.send('{"app_id": "fr.freebox.domf", "password": "' + hash + '"}');
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState != 4) return;
+				if (xhr.status == 200){
+					var res = JSON.parse( xhr.responseText );
+					console.log(res);
+					session_token = res.result.session_token;
+					localStorage["session_token"] = session_token;
+					console.log("New session_token : " + session_token);
+					if (typeof(callback)!=='undefined')
+					callback(true);
+				}
+				if (xhr.status == 403){
+					var res = JSON.parse( xhr.responseText );
+					challenge = res.result.challenge;
+					if (retry > 0)
+					{
+						retry -= 1;
+						remove_cookie();
+						retrieve();
+					}
+				}  
+				
+		};
+	}
 }
 
-function translateErrorCode(code,def)
-{
-	if (code == 1 ) return "Veuillez saisir un mot de passe correct dans les options du plugin";
-	if (code == 101) return "La freebox n'est pas joignable";
-	return def;
-}
 
 function secondsToTime(sec0)
 {

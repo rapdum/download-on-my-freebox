@@ -1,25 +1,30 @@
 
 // --------------------------------------- helper ------------------------------------
-
+var xhInfo;
 function update()
 {
-	var path = "/download.cgi";
-	var params = "method=download.list"+ "&csrf_token=" + encodeURIComponent(localStorage["token"]);
-	
-	sendRequest(path, params, "application/x-www-form-urlencoded", buildInfo);
+	console.log("updating info");
+	xhInfo = new XMLHttpRequest();
+	xhInfo.open("GET", buildURL("downloads/"), true);  
+	xhInfo.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+	xhInfo.onreadystatechange = buildInfo;
+	xhInfo.send();
 }
-
 function sendControl(action, id, type) {
-	var path = "/download.cgi";
-	var params = '{"jsonrpc":"2.0","method":"download.'+ action +'","params":["'+ type +'",' + id + '],"'+'csrf_token":"' + localStorage["token"]+'"}';
-	
-	function sendControlResult() { 
-	   if (request.readyState == 4 && request.status == 200) {
-    	console.log( request.responseText );
-		}
-	} 
-	console.log(params);
-	sendRequest(path, params, "application/json; charset=utf-8", sendControlResult);
+	var xhControl = new XMLHttpRequest();
+	if (action == "remove")
+	{
+		xhControl.open("DELETE", buildURL("downloads/" + id), false);  
+		xhControl.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+		xhControl.send();
+	}
+	else
+	{
+		var params = '{"status": "' + action +'"}';
+		xhControl.open("PUT", buildURL("downloads/" + id), false);  
+		xhControl.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+		xhControl.send(params);
+	}
 	update();
 }
 
@@ -33,7 +38,7 @@ function show(status)
 
 function show_encours()
 {
-	show("running,paused");
+	show("downloading,stopped");
 	menu("encours");
 }
 
@@ -43,9 +48,13 @@ function show_termines()
 	menu("termines");
 }
 
+function on_login_result(loggedin)
+{
+	if (loggedin) update();
+}
+
 function onload()
 {	
-	
 	document.getElementById("encours").addEventListener("click",show_encours);
 	document.getElementById("termines").addEventListener("click",show_termines);
 	var select = document.getElementById("options");
@@ -53,16 +62,10 @@ function onload()
 	msg = "<a target='_blank' href='"+ url +"'>Options</a>" ;
 	select.innerHTML = msg;
 	
-	function onLogin()
-	{	
-		setInterval(update,3000);
-		var filter = localStorage["filter"];
-		if (!filter) show("done,seeding");
-		update();
-		
-	}
-	update();
-	login(onLogin);
+	var filter = localStorage["filter"];
+	if (!filter) show("done,seeding");
+	get_session(update);
+	setInterval(update,3000);
 }
 
 
@@ -73,12 +76,12 @@ function buildControl(file, listeners){
 	//listeners will store parameter needed for future callbacks
 	var cmd = "";
 	var img = "";
-	if (file.status == "running"){
-		cmd="stop";
+	if (file.status == "downloading"){
+		cmd="stopped";
 		img="img/stop.png";
 	}
-	else if (file.status == "paused"){
-		cmd="start";
+	else if (file.status == "stopped"){
+		cmd="downloading";
 		img="img/start.png";
 	}
 	else{
@@ -90,48 +93,43 @@ function buildControl(file, listeners){
 		id = cmd + file.id;
 		html += '<a href="" id="' + id + '">';
 		listeners.push([id, cmd, file.id, file.type] );
-		//html += '<a href="" onclick=\'sendControl("'+ cmd + '", ' + file.id + ', "' +file.type +'");\'>';
 		html +=  "<img src='" + img + "' /></a>";
 	}
 	id = "remove" + file.id;
 	html += '<a href="" id="' + id + '">';
 	html +=  "<img src='img/remove.png' /></a>";
 	listeners.push([id, "remove", file.id, file.type] );
-	//document.getElementById(id).addEventListener("click",sendControl,"remove",file.id, file.type);
 	
 	return html;
 }
 
 function buildInfo(){
-	var selectseed = document.getElementById("seedbox");
-	selectseed.href=buildURL("/download.php");
+	
+	//var selectseed = document.getElementById("seedbox");
+	//selectseed.href=buildURL("/download.php");
 	var listeners = [];
-	if (xh.readyState == 4 && xh.status == 200) {
-		var res = JSON.parse( xh.responseText );
+	if (xhInfo.readyState != 4) /* 4 : état "complete" */
+			{return;}
+	   if (xhInfo.status == 200) /* 200 : code HTTP pour OK */
+	    {
+		var res = JSON.parse( xhInfo.responseText );
 		var size = 0;
 		var activeCount = 0;
 		var downloadCount = 0;
 		var active = "";
 		for (i in res.result){
 			var file = res.result[i];
-			// moche moche moche mais bon, les status ont changés!
-			if (file.transferred == file.size)
-			{
-				file.status = "done"; 
-			}
 			
 			if (localStorage["filter"].indexOf(file.status)>=0){
-			
+				//console.log(file);
 				if (file.name.length > size) size = file.name.length;
 				var finished = 0;
 				if (file.size != 0){
-					finished = Math.round(file.transferred / file.size * 100);
+					finished = file.rx_pct / 100;
 				}
 				
 				if(file.rx_rate > 0) {
-					var reste_a_dl = file.size - file.transferred;
-					var temps = Math.round(reste_a_dl / file.rx_rate);
-					temps = secondsToTime(temps);
+					temps = secondsToTime(file.eta);
 				}
 				else {
 					temps = "";
@@ -200,7 +198,7 @@ function buildInfo(){
 		};
 		
 	}
-	if (xh.status == 403){
+	if (xhInfo.status == 403){
 		var select = document.getElementById("bots");
 		url = chrome.extension.getURL("options.html");
 		msg = "Veuillez v&eacute;rifier les parametres de configurations:";
