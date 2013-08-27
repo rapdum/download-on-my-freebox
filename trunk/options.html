@@ -20,25 +20,25 @@
 		</table>
 		<table>
 			<tr>
-				<td align="right">URL de la freebox pour l'accès à distance :</td>
-				<td><input type="text"  name="url" id="url" width="200">  </td>
-				<td> <img id="Check" name="Check" width="16"/> </td>
-				<td><button id="btn_register">Enregistrer le plugin</button>  </td>
-				<td> </td>
+				<td align="right"><button id="btn_register" style="visibility:hidden;">Enregistrer le plugin</button>  </td>
 			</tr>
 			<tr>
-				<td align="right">Token :</td>
-				<td><input type="text"  name="token" id="token"  width="200">  </td>
-				<td colspan=2><div id="registration_status"/></div></td>
+				<td align="right"><div id="registration_status"/></div></td>
 			</tr>
-			
+			<tr>
+				<td align="right">Connexion à la freebox : </td>
+				<td> <img id="Check" name="Check" width="16"/> </td>
+			</tr>
+			<tr>
+				<td align="right">Paramétrage pour l'accès distant : </td>
+				<td> <img id="remoteCheck" name="Check" width="16"/> </td>
+			</tr>
 		</table>
 
 <br>
 <input type="checkbox"  name="display_popup" id="display_popup"> Afficher les popups de fin de t&eacute;l&eacute;chargement
 <br>
 <br>
-<button id="btn_save">Save</button>
 <div id="status"/></div>
 <br>
 <br>

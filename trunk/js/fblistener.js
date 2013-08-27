@@ -37,13 +37,13 @@ function checkFinished(){
 		xh.abort();
 	};
 	xh.onreadystatechange = function () {
-	   if (xh.readyState != 4) /* 4 : état "complete" */
+	   if (xh.readyState != 4)
 			{return;}
-	   if (xh.status == 200) /* 200 : code HTTP pour OK */
+	   if (xh.status == 200)
 	   {
 			clearTimeout(timeout);
 			var res = JSON.parse( xh.responseText );
-			var active = ""
+			var active = localStorage["notDone"] 
 			newNotDone ="";
 			for (i in res.result)
 			{
@@ -51,13 +51,24 @@ function checkFinished(){
 				if (file.status != "seeding" && file.status != "done" )
 				{
 					newNotDone +="$"+ file.name+"$";
+					if (active.indexOf("$"+ file.name +"$")==-1 )
+					{
+						if (localStorage["freebox_display_popup"]==="true")
+						{
+							notif('img/down.png', 'D\351marrage du t\351l\351chargement', file.name, 7000);
+							console.log ("Download started : " + file.name);
+						}
+					}
 				}
 				else
 				{
 					if (notDone.indexOf("$"+ file.name +"$")>=0 )
 					{
 						if (localStorage["freebox_display_popup"]==="true")
-						notif( "img/ok.png", "T\351l\351chargement termin\351:", file.name,  0);
+						{
+							notif( "img/ok.png", "T\351l\351chargement termin\351", file.name,  0);
+							console.log ("Download finished : " + file.name);
+						}
 					}
 				}
 			}
