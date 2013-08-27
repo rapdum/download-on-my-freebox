@@ -1,6 +1,7 @@
 
 // --------------------------------------- helper ------------------------------------
 var xhInfo;
+
 function update()
 {
 	console.log("updating info");
@@ -38,14 +39,14 @@ function show(status)
 
 function show_encours()
 {
-	show("downloading,stopped");
-	menu("encours");
+	localStorage["current_menu"] = "encours";
+	show("downloading,stopping,stopped,error");
 }
 
 function show_termines()
 {
+	localStorage["current_menu"] = "termines";
 	show("done,seeding");
-	menu("termines");
 }
 
 function on_login_result(loggedin)
@@ -80,16 +81,28 @@ function buildControl(file, listeners){
 		cmd="stopped";
 		img="img/stop.png";
 	}
+	else if (file.status == "seeding"){
+		cmd="stopped";
+		img="img/stop.png";
+	}
 	else if (file.status == "stopped"){
 		cmd="downloading";
 		img="img/start.png";
+	}
+	else if (file.status == "error"){
+		cmd="retry";
+		img="img/retry.png";
+	}
+	else if (file.status == "done" && file.rx_pct==10000){
+		cmd="seeding";
+		img="img/retry.png";
 	}
 	else{
 		cmd="remove";
 		img="img/remove.png";
 	}
 	var html =''
-	if ("done,seeding".indexOf(file.status)<0){
+	if ("stopping".indexOf(file.status)<0 && (file.tx_pct< 10000 || file.rx_pct< 10000) ){
 		id = cmd + file.id;
 		html += '<a href="" id="' + id + '">';
 		listeners.push([id, cmd, file.id, file.type] );
@@ -108,9 +121,9 @@ function buildInfo(){
 	//var selectseed = document.getElementById("seedbox");
 	//selectseed.href=buildURL("/download.php");
 	var listeners = [];
-	if (xhInfo.readyState != 4) /* 4 : état "complete" */
+	if (xhInfo.readyState != 4) 
 			{return;}
-	   if (xhInfo.status == 200) /* 200 : code HTTP pour OK */
+	   if (xhInfo.status == 200) 
 	    {
 		var res = JSON.parse( xhInfo.responseText );
 		var size = 0;
@@ -127,46 +140,79 @@ function buildInfo(){
 				if (file.size != 0){
 					finished = file.rx_pct / 100;
 				}
-				
+				var finished_up = 0;
+				if (file.size != 0){
+					finished_up = file.tx_pct / 100;
+				}
+				var temps = "";
 				if(file.rx_rate > 0) {
 					temps = secondsToTime(file.eta);
-				}
-				else {
-					temps = "";
-				}
+				} 
+				var path = B64.decode(file.download_dir);
+				path = path.substring(1, path.length-3);
+				var filePath = "file://FREEBOX/" + path + file.name;
 				
-				if (localStorage["filter"] != "done,seeding") {
+				if ( file.rx_rate > 1000000 ){
+					speed = Math.round(100 * file.rx_rate / 1000000) / 100 + " Mo/s";
+				}else{
+					speed = Math.round(file.rx_rate / 1000) + " Ko/s";
+				}
+				if ( file.tx_rate > 1000000 ){
+					speed_up = Math.round(100 * file.tx_rate / 1000000) / 100 + " Mo/s";
+				}else{
+					speed_up = Math.round(file.tx_rate / 1000) + " Ko/s";
+				}
+				active += "<tr>";
+					active += "<td><a class='titre_dl' title=\"" + file.name + "\">" + file.name + "</a> </td>";
+				active += '</tr>';
+				active += "<tr>";
 				
-					document.getElementById("encours").className = "menu_actif";
-					if ( file.rx_rate > 1000000 ){
-						speed = Math.round(100 * file.rx_rate / 1000000) / 100 + " Mo/s";
-					}else{
-						speed = Math.round(file.rx_rate / 1000) + " Ko/s";
+				active += "<td><a class='path_dl' >" + filePath + "</a> </td>";
+				active += '</tr>';
+				active += '<tr>';
+				if (file.status === "error"){
+					active += '<td align="left"> Erreur : ' + file.error +"</td>";
+				}
+				else
+				{
+					active += '<td align="left"> D: ';
+					if (file.rx_pct == 10000)
+					{
+						active += "Termin&eacute;";
 					}
-					active += "<tr>";
-						active += "<td><a class='titre_dl' title=\"" + file.name + "\">" + file.name + "</a> </td>";
-					active += '</tr>';
-					active += '<tr>';
-						if (file.status != "paused"){
-							active += '<td align="left"> ' + finished + "% (" + speed + ") - " + temps +"</td>";
-						} else {
-							active += '<td align="left"> ' + finished + "% - pause</td>";
-						}//active += '<td align="right" width="75"> ' + speed + "</td>";
-						//active += '<td align="right" width="75"> ' + temps + "</td>";
-						active += '<td align="right" width="35">' + buildControl(file, listeners) + '</td>';
-					active += '</tr>';
-					active += '<tr>';
-						active += "<td colspan='5' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div></td>";
-					active += '</tr>';
+					else
+					{
+						active += finished + "% "
+						if (file.status != "stopped"){
+							active += "(" + speed + ") " + temps;
+						}
+						else{
+							active += "(pause)";
+						}
+					}
+					active +="  -  U: ";
+					if (file.tx_pct >= 10000 )
+					{
+						active += "Termin&eacute;";
+					}
+					else
+					{
+						active += finished_up + "%"
+						if (file.tx_rate != 0){
+							active += "(" + speed_up + ")" ;
+						}
+						if (file.status == "done")
+						{
+							active += "(pause)" ;
+						}
+					}
+					active += "</td>";
 				}
-				else {
-				
-					document.getElementById("termines").className = "menu_actif";
-					active += "<tr>";
-						active += "<td class='td_dl_termine'>" + file.name + ' </td>'
-						active += '<td align="right" width="20">' + buildControl(file, listeners) + '</td>';
-					active += "</tr>";
-				}
+				active += '<td align="right" width="35">' + buildControl(file, listeners) + '</td>';
+				active += '</tr>';
+				active += '<tr>';
+					active += "<td colspan='5' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div><div class='dl_fond'><div class='dl_bar_up' style='width: "+finished_up+"%;'></div></div></td>";
+				active += '</tr>';
 			}
 			if ("done,seeding".indexOf(file.status)>=0)  
 					downloadCount +=1;
@@ -184,6 +230,7 @@ function buildInfo(){
 		
 		var select = document.getElementById("bots");
 		select.innerHTML=active;
+		document.getElementById(localStorage["current_menu"]).className = "menu_actif";
 		
 		//register click listener
 		for (var i = 0; i < listeners.length; i++) {

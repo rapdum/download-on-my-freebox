@@ -3,11 +3,28 @@ var imgnok = "img/nok.png";
 var encrypt = 'Download on my freebox is neat';
 var track_id;
 
-function loginCB(ok)
+function check_freebox(ok)
 {
 	var select = document.getElementById("Check");
-	var err = document.getElementById("err");
 	if (ok)
+	{
+		select.src = imgok;
+		document.getElementById("btn_register").style.visibility = "hidden";
+		get_config(check_remote_config);
+		//build_remote_conf();
+	}
+	else
+	{
+		document.getElementById("btn_register").style.visibility = "visible";
+		select.src = imgnok;
+	}
+}
+
+function check_remote_config(config)
+{
+	var select = document.getElementById("remoteCheck");
+	console.log(config);
+	if (config.is_secure_pass && config.remote_access && config.api_remote_access)
 	{
 		select.src = imgok;
 	}
@@ -18,15 +35,11 @@ function loginCB(ok)
 }
 
 
-function checkPassword(){
-	get_session( loginCB );
-	build_remote_conf();
+function check_plugin_configuration(){
+	get_session( check_freebox )
 }
 
-	
-
 function requestAppToken(){
-  
 	console.log("Verification des nouvelles API");
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', buildURL("login/authorize/"), true);
@@ -60,12 +73,9 @@ function requestAppToken(){
 					clearInterval(refreshIntervalId);
 					if ( res.result.status == "granted" )
 					{
-						select = document.getElementById("token");
-						select.value = app_token;
 						localStorage["app_token"] = app_token;
 						localStorage["track_id"] = track_id;
-						get_session();
-						
+						check_plugin_configuration( );
 					}
 					else
 					{
@@ -99,27 +109,7 @@ function display_registration(status)
 function save_options() {
   select = document.getElementById("display_popup");
   localStorage["freebox_display_popup"] = select.checked;
-  select = document.getElementById("url");
-  if (select.value != "")
-  {
-	localStorage["freeboxUrl"] = select.value;
-  }
-  else 
-  {
-	localStorage["freeboxUrl"] = "mafreebox.freebox.fr";
-  }
-  console.log(localStorage["freeboxUrl"]);
-  select = document.getElementById("token");
-  localStorage["app_token"] = select.value;
-  checkPassword();
   
-  // Update status to let user know options were saved.
-  var status = document.getElementById("status");
-  status.innerHTML = "Options Sauvegard&eacute;es.";
-  changeReasons();
-  setTimeout(function() {
-    status.innerHTML = "";
-  }, 750);
 }
 function changeReasons(){
 	if (!localStorage["restore count"]) {
@@ -137,9 +127,26 @@ function changeReasons(){
 	localStorage["restore count"] = count + 1;
 }
 // Restores select box state to saved value from localStorage.
+
+function on_display_popup_clicked()
+{
+	localStorage["freebox_display_popup"] = document.getElementById("display_popup").checked;
+	inform("Options Sauvegard&eacute;es.");
+}
+
+function inform(msg)
+{
+	// Update status to let user know options were saved.
+	  var status = document.getElementById("status");
+	  status.innerHTML = msg;
+	  setTimeout(function() {
+		status.innerHTML = "";
+	  }, 750);
+}
+
 function restore_options() {
     changeReasons();
-	document.getElementById("btn_save").addEventListener("click",save_options);
+	document.getElementById("display_popup").addEventListener("click",on_display_popup_clicked);
 	document.getElementById("btn_register").addEventListener("click",requestAppToken);
   
   var display_popup = localStorage["freebox_display_popup"];
@@ -150,22 +157,15 @@ function restore_options() {
   		display_popup = true;
   	}
   var select = document.getElementById("display_popup");
-  console.log(display_popup);
   select.checked = (display_popup === 'true');
-  
-  select = document.getElementById("token");
-  select.value = localStorage["app_token"];
-  
   
   var url = localStorage["freeboxUrl"];
   if (!url) {
     return;
   }
-  var select = document.getElementById("url");
-  select.value = url;
   
   
-  checkPassword();
+  check_plugin_configuration();
 }
 
 window.addEventListener("load", restore_options);

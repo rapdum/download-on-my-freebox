@@ -86,7 +86,6 @@ function downloadFile(url){
 	   {
 			var res = JSON.parse( req.responseText );
 			if (res.success)
-				notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', filename, 7000);
 				checkFinished();
 		}
 	}
@@ -144,7 +143,7 @@ function downloadTorrent (url) {
 			   {
 					var res = JSON.parse( req.responseText );
 					if (res.success)
-						notif('img/down.png', 'D\351marrage du t\351l\351chargement  :', filename, 7000);
+						checkFinished();
 				}
 			}
 			req.send(form);

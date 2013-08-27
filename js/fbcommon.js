@@ -74,16 +74,21 @@ function get_config( callback )
 {
 	var xhrconf = new XMLHttpRequest();
 	console.log("Checking config");
-	xhr.open('get', buildURL("connection/config/"), true);
-	xhr.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
-	xhr.send();
-	xhr.onreadystatechange = function () {
-	if (xhr.readyState != 4) return;
-		if (xhr.status == 200){
-			var conf = JSON.parse( xhr.responseText );
+	xhrconf.open('get', buildURL("connection/config/"), true);
+	xhrconf.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+	xhrconf.send();
+	xhrconf.onreadystatechange = function () {
+	if (xhrconf.readyState != 4) return;
+		if (xhrconf.status == 200){
+			var conf = JSON.parse( xhrconf.responseText );
 			if (typeof(callback)!=='undefined')
 				callback(conf.result);
 		}  
+		else
+		{
+			callback(false);
+		}
+		  
 	};
 }
 function get_session(callback)
@@ -123,6 +128,7 @@ function get_session(callback)
 		var hash = CryptoJS.HmacSHA1(challenge, localStorage["app_token"]);
 		console.log("  --> hash : " + hash);
 		
+						remove_cookie();
 		xhr.open('POST', buildURL("login/session/"), true);
 		xhr.send('{"app_id": "fr.freebox.domf", "password": "' + hash + '"}');
 		xhr.onreadystatechange = function () {
@@ -143,7 +149,11 @@ function get_session(callback)
 					{
 						retry -= 1;
 						remove_cookie();
-						retrieve();
+						retrieve(challenge, callback);
+					}
+					else
+					{
+						callback(false);
 					}
 				}  
 				
