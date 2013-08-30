@@ -24,12 +24,11 @@ function onload()
 }
 
 function checkFinished(){
-  var notDone = localStorage["notDone"];
-  if (!notDone) notDone="";
+  var notDone = conf["not_done"];
   console.log("Checking for new download");
   var xh = new XMLHttpRequest();
   xh.open("GET", buildURL("downloads/"), true);  
-  xh.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+  setFBHeader(xh);
   xh.send();
 
   function onTimeout(){
@@ -43,7 +42,7 @@ function checkFinished(){
 	   {
 			clearTimeout(timeout);
 			var res = JSON.parse( xh.responseText );
-			var active = localStorage["notDone"] 
+			var active = conf["not_done"] 
 			newNotDone ="";
 			for (i in res.result)
 			{
@@ -53,7 +52,7 @@ function checkFinished(){
 					newNotDone +="$"+ file.name+"$";
 					if (active.indexOf("$"+ file.name +"$")==-1 )
 					{
-						if (localStorage["freebox_display_popup"]==="true")
+						if (conf["freebox_display_popup"])
 						{
 							notif('img/down.png', 'D\351marrage du t\351l\351chargement', file.name, 7000);
 							console.log ("Download started : " + file.name);
@@ -64,7 +63,7 @@ function checkFinished(){
 				{
 					if (notDone.indexOf("$"+ file.name +"$")>=0 )
 					{
-						if (localStorage["freebox_display_popup"]==="true")
+						if (conf["freebox_display_popup"])
 						{
 							notif( "img/ok.png", "T\351l\351chargement termin\351", file.name,  0);
 							console.log ("Download finished : " + file.name);
@@ -73,7 +72,7 @@ function checkFinished(){
 				}
 			}
 			notDone = newNotDone;
-			localStorage["notDone"] = notDone;
+			store_conf("not_done", notDone);
 		}
 		if (xh.status == 403){
 			function cb(res){

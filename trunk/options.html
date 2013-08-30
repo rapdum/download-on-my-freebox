@@ -2,6 +2,7 @@
 <head><title>Download on my freebox</title></head>
 <script src="js/aes.js"></script>
 <script src="js/hmac-sha1.js"></script>
+<script src="js/base64.js"></script>
 <script src="js/fbcommon.js"></script>
 <script src="js/options.js"></script>
 
@@ -18,25 +19,44 @@
 				</td>
 			</tr>
 		</table>
-		<table>
-			<tr>
-				<td align="right"><button id="btn_register" style="visibility:hidden;">Enregistrer le plugin</button>  </td>
-			</tr>
-			<tr>
-				<td align="right"><div id="registration_status"/></div></td>
-			</tr>
-			<tr>
-				<td align="right">Connexion à la freebox : </td>
-				<td> <img id="Check" name="Check" width="16"/> </td>
-			</tr>
-			<tr>
-				<td align="right">Paramétrage pour l'accès distant : </td>
-				<td> <img id="remoteCheck" name="Check" width="16"/> </td>
-			</tr>
-		</table>
+		<table><tr>
+			<td width="50%" align="right" style="border-right:solid #AAAAAA; vertical-align:top">
+				<table>
+					<tr>
+						<td align="right">Connexion à la freebox : </td>
+						<td> <img id="Check" name="Check" width="16"/> </td>
+					</tr>
+					<tr>
+						<td align="right">Paramétrage pour l'accès distant : </td>
+						<td> <img id="remoteCheck" name="Check" width="16"/> </td>
+					</tr>
+					<tr>
+						<td align="right">Afficher les popups de notification : </td>
+						<td> <input type="checkbox"  name="display_popup" id="display_popup"> </td>
+					</tr>
+					
+					
+				</table>
+			</td>
+			<td>
+				<table>
+					<tr>
+						<div id="btn_register" style="display:none;"> <button style="display;none">Enregistrer le plugin</button> </div>
+								
+						<div style="display:none;" id="registration_status"> </div>				
 
+						<div id="accept_photo" style="display:none;"> <img src="img/accept.png"/> </div>
+						<div id="freebox_status" style="display:none;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;"> </div>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+						<td align="center" colspan="2"></br><button id="btn_erase_all">Reset</button>  </td>
+					</tr>
+		</table>
 <br>
-<input type="checkbox"  name="display_popup" id="display_popup"> Afficher les popups de fin de t&eacute;l&eacute;chargement
+
 <br>
 <br>
 <div id="status"/></div>

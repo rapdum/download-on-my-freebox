@@ -7,7 +7,7 @@ function update()
 	console.log("updating info");
 	xhInfo = new XMLHttpRequest();
 	xhInfo.open("GET", buildURL("downloads/"), true);  
-	xhInfo.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+	setFBHeader(xhInfo);
 	xhInfo.onreadystatechange = buildInfo;
 	xhInfo.send();
 }
@@ -16,14 +16,14 @@ function sendControl(action, id, type) {
 	if (action == "remove")
 	{
 		xhControl.open("DELETE", buildURL("downloads/" + id), false);  
-		xhControl.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+		setFBHeader(xhControl);
 		xhControl.send();
 	}
 	else
 	{
 		var params = '{"status": "' + action +'"}';
 		xhControl.open("PUT", buildURL("downloads/" + id), false);  
-		xhControl.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+		setFBHeader(xhControl);
 		xhControl.send(params);
 	}
 	update();
@@ -33,19 +33,19 @@ function sendControl(action, id, type) {
 
 function show(status)
 {
-	localStorage["filter"] = status;
-	buildInfo();
+	console.log(status);
+	store_conf("filter", status, buildInfo);
 }
 
 function show_encours()
 {
-	localStorage["current_menu"] = "encours";
+	store_conf("current_menu", "encours");
 	show("downloading,stopping,stopped,error");
 }
 
 function show_termines()
 {
-	localStorage["current_menu"] = "termines";
+	store_conf("current_menu", "termines");
 	show("done,seeding");
 }
 
@@ -62,9 +62,8 @@ function onload()
 	url = chrome.extension.getURL("options.html");
 	msg = "<a target='_blank' href='"+ url +"'>Options</a>" ;
 	select.innerHTML = msg;
-	
-	var filter = localStorage["filter"];
-	if (!filter) show("done,seeding");
+	console.log("pouet");
+	if (!conf.filter) show("done,seeding");
 	get_session(update);
 	setInterval(update,3000);
 }
@@ -133,7 +132,7 @@ function buildInfo(){
 		for (i in res.result){
 			var file = res.result[i];
 			
-			if (localStorage["filter"].indexOf(file.status)>=0){
+			if (conf.filter.indexOf(file.status)>=0){
 				//console.log(file);
 				if (file.name.length > size) size = file.name.length;
 				var finished = 0;
@@ -148,9 +147,7 @@ function buildInfo(){
 				if(file.rx_rate > 0) {
 					temps = secondsToTime(file.eta);
 				} 
-				var path = B64.decode(file.download_dir);
-				path = path.substring(1, path.length-3);
-				var filePath = "file://FREEBOX/" + path + file.name;
+				var filePath = "file://FREEBOX/" + decode_dir( file.download_dir ) + file.name;
 				
 				if ( file.rx_rate > 1000000 ){
 					speed = Math.round(100 * file.rx_rate / 1000000) / 100 + " Mo/s";
@@ -230,7 +227,7 @@ function buildInfo(){
 		
 		var select = document.getElementById("bots");
 		select.innerHTML=active;
-		document.getElementById(localStorage["current_menu"]).className = "menu_actif";
+		document.getElementById(conf["current_menu"]).className = "menu_actif";
 		
 		//register click listener
 		for (var i = 0; i < listeners.length; i++) {
