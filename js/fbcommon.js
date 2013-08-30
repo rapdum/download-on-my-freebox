@@ -17,12 +17,59 @@
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
  
- // ------------------------------------- ----------------------------------------------
+ //--------------Storage related-----------------------------------
 
-var freeboxUrl = buildURL("");
+var storage = chrome.storage.local;
+
+// !!!!!!! Never redeclare conf variable
+conf = getStorageConf();
+
+function getStorageConf()
+{
+	if (typeof chrome.extension.getBackgroundPage().fb_conf === "undefined")
+	{
+		console.log("restoring conf")
+		storage.get(['conf'], function(items) {
+		// To avoid checking items.css we could specify storage.get({css: ''}) to
+		// return a default value of '' if there is no css value yet.
+		tmpconf = items.conf;
+		conf = tmpconf;
+		chrome.extension.getBackgroundPage().fb_conf = conf;
+		if (typeof tmpconf["app_token"] === "undefined") store_conf("app_token", "");
+		if (typeof tmpconf["not_done"] === "undefined") store_conf("not_done", "");
+		if (typeof tmpconf["freebox_display_popup"] === "undefined") store_conf("freebox_display_popup", true);
+		
+		});
+	}
+	return chrome.extension.getBackgroundPage().fb_conf;
+}
+
+function store_conf(name,value)
+{
+	var conf = chrome.extension.getBackgroundPage().fb_conf
+	conf[name]=value;
+	// console.log(conf);
+	storage.set({"conf": conf});
+}
+
+function erase_conf(cb) {
+	remove_cookie();
+	chrome.storage.local.clear(cb);
+	conf.filter = "" ;
+	conf.current_menu = "" ;
+	conf.not_done = "" ;
+	conf.app_token = "" ;
+	conf.session_token = "" ;
+	conf.freebox_url = "" ;
+	conf.restore_count = 0;
+	conf.track_id = "" ;
+	conf.freebox_display_popup = true ;
+}
+
+//--------------  -----------------------------------
+
 var CODE_PHRASE = "Download on my freebox is neat";
 
-console.log("Freebox URL :" + freeboxUrl);
 
 function remove_cookie()
 {
@@ -39,11 +86,9 @@ function remove_cookie()
 
 function buildURL(path)
 {
-	if (!localStorage["freeboxUrl"]) 
-		localStorage["freeboxUrl"] = "mafreebox.freebox.fr";
-	freeboxUrl = "http://" + localStorage["freeboxUrl"] ;
-	if (freeboxUrl === "http://" ) 
-		freeboxUrl="http://mafreebox.freebox.fr";
+	if (!conf["freebox_url"]) 
+		store_conf("freebox_url",  "mafreebox.freebox.fr");
+	var freeboxUrl="http://mafreebox.freebox.fr";
 	var api = "/api/v1/"
 	return  freeboxUrl + api + path;
 }
@@ -51,12 +96,12 @@ function buildURL(path)
 function storeToken(val)
 {	
 	var cipheredPass = Aes.Ctr.encrypt(val, CODE_PHRASE, 256);
-	localStorage["app_token"] = cipheredPass;
+	store_conf("app_token", cipheredPass);
 }
 
 function getToken()
 {
-	var cipheredPass = localStorage["app_token"];
+	var cipheredPass = conf["app_token"];
 	return Aes.Ctr.decrypt(cipheredPass, CODE_PHRASE, 256);
 }
 
@@ -65,24 +110,52 @@ function build_remote_conf()
 	function encode_line(conf)
 	{
 		var url = conf.remote_access_ip + ":" +conf.remote_access_port;
-		var decrypted = url + "|domf|" + localStorage["app_token"];
+		var decrypted = url + "|domf|" + conf["app_token"];
 		var encrypted = Aes.Ctr.encrypt(decrypted, CODE_PHRASE, 256);
 	}
 	get_config(encode_line);
+}
+
+function setFBHeader(xhr)
+{
+	xhr.setRequestHeader("X-Fbx-App-Auth", conf["session_token"]);
 }
 function get_config( callback )
 {
 	var xhrconf = new XMLHttpRequest();
 	console.log("Checking config");
 	xhrconf.open('get', buildURL("connection/config/"), true);
-	xhrconf.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+	setFBHeader(xhrconf);
 	xhrconf.send();
 	xhrconf.onreadystatechange = function () {
 	if (xhrconf.readyState != 4) return;
 		if (xhrconf.status == 200){
 			var conf = JSON.parse( xhrconf.responseText );
 			if (typeof(callback)!=='undefined')
-				callback(conf.result);
+				get_download_config(conf.result, callback);
+		}  
+		else
+		{
+			callback(false);
+		}
+		  
+	};
+}
+
+function get_download_config( config, callback )
+{
+	var xhrconf = new XMLHttpRequest();
+	console.log("Checking download config");
+	xhrconf.open('get', buildURL("downloads/config/"), true);
+	setFBHeader(xhrconf);
+	xhrconf.send();
+	xhrconf.onreadystatechange = function () {
+	if (xhrconf.readyState != 4) return;
+		if (xhrconf.status == 200){
+			var conf = JSON.parse( xhrconf.responseText );
+			if (typeof(callback)!=='undefined')
+				config.download = conf.result 
+				callback(config);
 		}  
 		else
 		{
@@ -93,10 +166,15 @@ function get_config( callback )
 }
 function get_session(callback)
 {
+	if (!conf.app_token)
+	{	
+		callback(false);
+		return;
+	}
 	xhr = new XMLHttpRequest();
 	console.log("Checking session");
 	xhr.open('get', buildURL("login/"), true);
-	xhr.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+	setFBHeader(xhr);
 	xhr.send();
 	var challenge;
 	var retry = 2;
@@ -122,10 +200,10 @@ function get_session(callback)
 	{
 		var xhr = new XMLHttpRequest();
 		console.log("Ask for new session with : " );
-		console.log("  - app_token : " + localStorage["app_token"]);
+		console.log("  - app_token : " + conf["app_token"]);
 		console.log("  - challenge : " + challenge);
 		
-		var hash = CryptoJS.HmacSHA1(challenge, localStorage["app_token"]);
+		var hash = CryptoJS.HmacSHA1(challenge, conf["app_token"]);
 		console.log("  --> hash : " + hash);
 		
 						remove_cookie();
@@ -137,7 +215,7 @@ function get_session(callback)
 					var res = JSON.parse( xhr.responseText );
 					console.log(res);
 					session_token = res.result.session_token;
-					localStorage["session_token"] = session_token;
+					store_conf("session_token", session_token);
 					console.log("New session_token : " + session_token);
 					if (typeof(callback)!=='undefined')
 					callback(true);
@@ -161,7 +239,12 @@ function get_session(callback)
 	}
 }
 
-
+function decode_dir(hash)
+{
+	var path = B64.decode(hash);
+	//path = path.substring(1, path.length-3);
+	return path;
+}
 function secondsToTime(sec0)
 {
 	var sec =sec0;

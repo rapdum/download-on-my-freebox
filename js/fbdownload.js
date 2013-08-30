@@ -17,6 +17,7 @@
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
 
+ 
 // *******  call with rightclick on a URL  ****************************************
  
 function onClick(info, tab) {
@@ -75,7 +76,7 @@ function downloadFile(url){
 	var params = "download_url=" + encodeURIComponent(url);
 	var req = new XMLHttpRequest();
 	req.open("POST", buildURL("downloads/add"), true);
-	req.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+	setFBHeader(req);
   	req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	
 	console.log("trying to send:" + filename);
@@ -133,7 +134,7 @@ function downloadTorrent (url) {
 			form.append("download_file", blob, filename); 
 			var req = new XMLHttpRequest();
 			req.open("POST", buildURL("downloads/add"), true);
-			req.setRequestHeader("X-Fbx-App-Auth", localStorage["session_token"]);
+			setFBHeader(req);
 			
 			// send form to freebox 
 			
