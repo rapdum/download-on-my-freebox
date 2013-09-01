@@ -62,7 +62,6 @@ function onload()
 	url = chrome.extension.getURL("options.html");
 	msg = "<a target='_blank' href='"+ url +"'>Options</a>" ;
 	select.innerHTML = msg;
-	console.log("pouet");
 	if (!conf.filter) show("done,seeding");
 	get_session(update);
 	setInterval(update,3000);
