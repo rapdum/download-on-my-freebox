@@ -29,15 +29,14 @@ function getStorageConf()
 	if (typeof chrome.extension.getBackgroundPage().fb_conf === "undefined")
 	{
 		console.log("restoring conf")
-		storage.get(['conf'], function(items) {
-		// To avoid checking items.css we could specify storage.get({css: ''}) to
-		// return a default value of '' if there is no css value yet.
+		storage.get({conf:{}}, function(items) {
 		tmpconf = items.conf;
 		conf = tmpconf;
 		chrome.extension.getBackgroundPage().fb_conf = conf;
 		if (typeof tmpconf["app_token"] === "undefined") store_conf("app_token", "");
 		if (typeof tmpconf["not_done"] === "undefined") store_conf("not_done", "");
 		if (typeof tmpconf["freebox_display_popup"] === "undefined") store_conf("freebox_display_popup", true);
+		store_conf("use_remote", false);
 		
 		});
 	}
@@ -47,8 +46,7 @@ function getStorageConf()
 function store_conf(name,value)
 {
 	var conf = chrome.extension.getBackgroundPage().fb_conf
-	conf[name]=value;
-	// console.log(conf);
+	conf[name] = value;
 	storage.set({"conf": conf});
 }
 
@@ -70,7 +68,6 @@ function erase_conf(cb) {
 
 var CODE_PHRASE = "Download on my freebox is neat";
 
-
 function remove_cookie()
 {
 	chrome.cookies.getAll({}, function(cookies) {
@@ -86,9 +83,15 @@ function remove_cookie()
 
 function buildURL(path)
 {
-	if (!conf["freebox_url"]) 
+	if (conf.use_remote) 
+	{
+		store_conf("freebox_url",  conf.remote_ip + ":" + conf.remote_port);
+	}
+	else
+	{
 		store_conf("freebox_url",  "mafreebox.freebox.fr");
-	var freeboxUrl="http://mafreebox.freebox.fr";
+	}
+	var freeboxUrl="http://" + conf.freebox_url;
 	var api = "/api/v1/"
 	return  freeboxUrl + api + path;
 }
@@ -164,23 +167,42 @@ function get_download_config( config, callback )
 		  
 	};
 }
-function get_session(callback)
+function get_session(callback, use_remote)
 {
+	if(typeof(changeUrl)==='undefined') store_conf("use_remote", false);
 	if (!conf.app_token)
 	{	
 		callback(false);
 		return;
 	}
 	xhr = new XMLHttpRequest();
-	console.log("Checking session");
-	xhr.open('get', buildURL("login/"), true);
+	var url = buildURL("login/");
+	console.log("Checking session on " + url);
+	xhr.open('get', url, true);
 	setFBHeader(xhr);
 	xhr.send();
 	var challenge;
 	var retry = 2;
+	function onTimeout(){
+		console.log("checkFinished timeout");
+		xhr.abort();
+		store_conf("use_remote",  true);
+		if (!use_remote)
+			get_session(callback, true);
+	};
+	var timeout=setTimeout(onTimeout,1000);	
+	
 	xhr.onreadystatechange = function () {
+	
 	if (xhr.readyState != 4) return;
-		if (xhr.status == 200){
+	if (xhr.status == 0){
+			clearTimeout(timeout);
+			store_conf("use_remote",  !conf.user_remote);
+			if (changeUrl)
+				get_session(callback, false);
+		}  
+		else if (xhr.status == 200){
+			clearTimeout(timeout);
 			var res = JSON.parse( xhr.responseText );
 			challenge = res.result.challenge;
 			if ( res.result.logged_in == false)
@@ -195,18 +217,16 @@ function get_session(callback)
 					callback(true);
 			}
 		}  
+			
 	};
 	function retrieve(challenge, callback)
 	{
 		var xhr = new XMLHttpRequest();
-		console.log("Ask for new session with : " );
-		console.log("  - app_token : " + conf["app_token"]);
-		console.log("  - challenge : " + challenge);
+		console.log("Ask for new session " );
 		
 		var hash = CryptoJS.HmacSHA1(challenge, conf["app_token"]);
-		console.log("  --> hash : " + hash);
 		
-						remove_cookie();
+		remove_cookie();
 		xhr.open('POST', buildURL("login/session/"), true);
 		xhr.send('{"app_id": "fr.freebox.domf", "password": "' + hash + '"}');
 		xhr.onreadystatechange = function () {
@@ -216,7 +236,7 @@ function get_session(callback)
 					console.log(res);
 					session_token = res.result.session_token;
 					store_conf("session_token", session_token);
-					console.log("New session_token : " + session_token);
+					console.log("New session_token");
 					if (typeof(callback)!=='undefined')
 					callback(true);
 				}

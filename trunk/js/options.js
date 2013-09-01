@@ -2,6 +2,7 @@ var imgok = "img/ok.png";
 var imgnok = "img/nok.png";
 var encrypt = 'Download on my freebox is neat';
 var track_id;
+var fb_config;
 
 function check_freebox(ok)
 {
@@ -9,13 +10,15 @@ function check_freebox(ok)
 	if (ok)
 	{
 		select.src = imgok;
-		document.getElementById("btn_register").style.display = "none";
+		document.getElementById("register_div").style.display = "none";
 		get_config(check_remote_config);
 	}
 	else
 	{
-		document.getElementById("btn_register").style.display = "block";
+		document.getElementById("register_div").style.display = "block";
 		document.getElementById("freebox_status").style.display = "none";
+		document.getElementById("generate_div").style.display = "none";
+		
 		select.src = imgnok;
 		document.getElementById("remoteCheck").src = imgnok;
 	}
@@ -25,21 +28,26 @@ function check_remote_config(config)
 {
 	var select = document.getElementById("remoteCheck");
 	console.log(config);
+	fb_config = config;
+	
+	store_conf( "remote_ip", config.remote_access_ip );
+	store_conf( "remote_port", config.remote_access_port );
+	
 	var status="<table style=' background-color: #000000; color:#E8DC05; font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;'>";
 	
 	status += "<tr style=' background-color: #E8DC05; color:#000000;'><td colspan='2'> G&eacute;n&eacute;ral</td></tr>";
 	
 	status += "<tr><td>IP : </td><td>" +  config.remote_access_ip + "</td></tr>";
-	status += "\n" + "<tr><td>Acc&egrave;s distant : </td><td>";
+	status += "<tr><td>Acc&egrave;s distant : </td><td>";
 	status += config.remote_access ? "Authoris&eacute;" : "Interdit";
 	status += "</td></tr>";
-	status += "\n" + "<tr><td>Mot de passe : </td><td>";
+	status += "<tr><td>Mot de passe : </td><td>";
 	status += config.is_secure_pass ? "S&eacute;curis&eacute;" : "Ne respecte pas les regles pour l'acces distant";
 	status += "</td></tr>";
-	status += "\n" + "<tr><td>Utilisation des api : </td><td>";
+	status += "<tr><td>Utilisation des api : </td><td>";
 	status += config.api_remote_access ? "Authoris&eacute;" : "Interdit";
 	status += "</td></tr>";
-	status += "\n<tr><td>URL distant : </td><td>" + config.remote_access_ip + ":"+config.remote_access_port + "</td></tr>";
+	status += "<tr><td>URL distant : </td><td>" + config.remote_access_ip + ":"+config.remote_access_port + "</td></tr>";
 	
 	status += "<tr style=' background-color: #E8DC05; color:#000000;'><td colspan='2'> Downloads</td></tr>";
 	status += "<tr><td>R&eacute;pertoire par d&eacute;faut : </td><td>" +  decode_dir( config.download.download_dir ) + "</td></tr>";
@@ -48,7 +56,9 @@ function check_remote_config(config)
 	status += "<tr><td>R&eacute;pertoire surveill&eacute;: </td><td>" + surv  + "</td></tr>";
 	status += "</table>";
 	document.getElementById("freebox_status").style.display = "block";
+	document.getElementById("generate_div").style.display = "block";
 	document.getElementById("freebox_status").innerHTML = status;
+		
 	if (config.is_secure_pass && config.remote_access && config.api_remote_access)
 	{
 		select.src = imgok;
@@ -59,6 +69,34 @@ function check_remote_config(config)
 	}
 }
 
+function genrate_remote_conf()
+{
+	var url = fb_config.remote_access_ip + ":" +fb_config.remote_access_port;
+	var decrypted = url + "|domf|" + conf["app_token"];
+	var pass = document.getElementById('password').value;
+	var encrypted = (pass == "") ? "" : Aes.Ctr.encrypt(decrypted, pass, 256);
+	
+	document.getElementById("generated_key").style.display = (pass == "") ? "none" : "block";
+	document.getElementById('generated_key').innerText = encrypted;
+}
+
+function save_remote()
+{
+	var encrypted = document.getElementById("remote_key").value;
+	var pass = document.getElementById("remote_password").value;
+	if (encrypted == ""|| pass =="")
+	{
+		return;
+	}
+	var decrypted = Aes.Ctr.decrypt(encrypted, pass, 256);
+	var dsplit = decrypted.split('|domf|');
+	var app_token=dsplit[1];
+	store_conf("app_token", app_token);
+	var urlandport = dsplit[0].split(":");
+	store_conf("remote_ip", urlandport[0]);
+	store_conf("remote_port", urlandport[1]);
+	check_plugin_configuration();
+}
 
 function check_plugin_configuration(){
 	get_session( check_freebox )
@@ -71,7 +109,8 @@ function erase_all()
 }
 
 function requestAppToken(){
-	console.log("Verification des nouvelles API");
+	store_conf("freebox_url",  "mafreebox.freebox.fr");
+	console.log("App token retrieval");
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', buildURL("login/authorize/"), true);
 	xhr.send('{"app_id": "fr.freebox.domf", "app_name": "Download on my freebox","app_version": "0.8.0","device_name": "Chrome"}');
@@ -130,12 +169,12 @@ function display_registration(status)
 	select = document.getElementById("registration_status");
 	if (status == "pending")
 	{
-		document.getElementById("btn_register").style.display = "none";
+		document.getElementById("register_div").style.display = "none";
 		document.getElementById("accept_photo").style.display = "block";
 		select.innerText = "Veuillez accepter sur le freebox Server...";
 		return;
 	}
-	document.getElementById("btn_register").style.display= "block";
+	document.getElementById("register_div").style.display= "block";
 	document.getElementById("accept_photo").style.display= "none";
 	select.innerText = status;
 	setTimeout(function() {
@@ -145,7 +184,7 @@ function display_registration(status)
 }
 
 function changeReasons(){
-	if (!conf["restore_count"]) {
+	if (typeof conf.restore_count === "undefined") {
 			store_conf("restore_count", 0);
 		}
 	phrases = ["Aujourd'hui, je me sens l'ame g&eacute;n&eacute;reuse :",
@@ -177,14 +216,14 @@ function inform(msg)
 }
 
 function restore_options() {
-	console.log("resstore");
+	console.log("restore");
     changeReasons();
 	document.getElementById("display_popup").addEventListener("click",on_display_popup_clicked);
 	document.getElementById("btn_register").addEventListener("click",requestAppToken);
+	document.getElementById("btn_register_slave").addEventListener("click", save_remote);
 	document.getElementById("btn_erase_all").addEventListener("click",erase_all);
-  
-	console.log(conf);
-  
+	document.getElementById("password").addEventListener("input",genrate_remote_conf);
+	
 	var display_popup = conf["freebox_display_popup"];
   
 	var select = document.getElementById("display_popup");
