@@ -62,7 +62,8 @@ function onload()
 	url = chrome.extension.getURL("options.html");
 	msg = "<a target='_blank' href='"+ url +"'>Options</a>" ;
 	select.innerHTML = msg;
-	if (!conf.filter) show("done,seeding");
+	
+	if (typeof conf["current_menu"] === "undefined") show_termines();
 	get_session(update);
 	setInterval(update,3000);
 }
@@ -128,6 +129,7 @@ function buildInfo(){
 		var activeCount = 0;
 		var downloadCount = 0;
 		var active = "";
+		console.log(res.result);
 		for (i in res.result){
 			var file = res.result[i];
 			
@@ -239,7 +241,6 @@ function buildInfo(){
 				sendControl(e.currentTarget.cmd,e.currentTarget.file,e.currentTarget.typ);
 			});
 		};
-		
 	}
 	if (xhInfo.status == 403){
 		var select = document.getElementById("bots");
@@ -248,6 +249,6 @@ function buildInfo(){
 		msg += "<br>"
 		msg += "<a target='_blank' href='"+ url +"'>Options</a>" ;
 		select.innerHTML = msg;
-		}
+	}
 }
 window.addEventListener("load", onload);
