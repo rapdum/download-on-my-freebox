@@ -41,12 +41,22 @@
 				</td>
 				<td>
 					<div id="register_div" style="display:none;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;"> 
-						<p style="border-top: solid 1px black;">Je suis &agrave; la maison. </br>Je n'ai pas encore autentifi&eacute; de plugin aupr&egrave;s du Freebox serveur (Acc&egrave;s en local)</p>
+						Choisissez une des deux solutions suivantes pour authentifier le plugin aupr&egrave;s du Freebox serveur 
+						<p style="border-top: solid 1px black; text-align:center; border-bottom: solid 1px black"> 1 - Demande d'autorisation</p>
+						<ul>
+							<li>Je suis &agrave; la maison. </li>
+							<li>Je n'ai pas encore autentifi&eacute; de plugin aupr&egrave;s du Freebox serveur (Acc&egrave;s en local)</li>
+						</ul>
 						<center>
 							<button id="btn_register" >Demander une autorisation</button>
 						</center>
-						<p style="border-top: solid 1px black;">J'ai d&eacutej&agrave autentifi&eacute; un plugin.</br>Je veux autentifier un autre plugin en local, ou en acc&egraves distant.</br>J'ai g&eacute;n&eacute;r&eacute; une cl&eacute; de configuration crypt&eacute;e par un mon mot de passe
-						</p>
+						<p style="border-top: solid 1px black; text-align:center; border-bottom: solid 1px black"> 2 - Transfert d'autorisation</p>
+						<ul>
+							<li>J'ai d&eacutej&agrave autentifi&eacute; un plugin.</li>
+							<li>Je veux autentifier un autre plugin en local, ou en acc&egraves distant.</li>
+							<li>J'ai g&eacute;n&eacute;r&eacute; une cl&eacute; de configuration crypt&eacute;e par un mon mot de passe </br>
+								&agrave; partir du premier plugin authentifi&eacute;</i>
+						</ul>
 						<table style="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;">
 							<tr>
 								<td>
@@ -82,10 +92,10 @@
 							<td>
 								<div id="generate_div" style="display:none;"> 
 									<table style="background-color: #000000; width:100%; color:#E8DC05;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;">
-										<tr style=' background-color: #E8DC05; color:#000000;'><td colspan='2'> G&eacute;n&eacute;rer une cl&eacute; de configuration crypt&eacute;e</td></tr>
+										<tr style=' background-color: #E8DC05; color:#000000;'><td colspan='2'> G&eacute;n&eacute;rer une cl&eacute; de configuration crypt&eacute;e pour transf&eacute;rer l'autorisation</td></tr>
 										<tr>
 											<td width="131px">
-												Mot de passe :
+												Entrez un mot de passe :
 											</td>
 											<td>
 												<input type="password" id="password" style="border:solid 1px black; border-radius:5px; text-align:center;width:100%"/> 
@@ -93,7 +103,7 @@
 										</tr>
 										<tr>
 											<td>
-												Cl&eacute; : 
+												Copiez cette cl&eacute; : 
 											</td>
 											<td>
 												<div id="generated_key" style="display:none;width:240px;word-wrap: break-word;border:solid 1px #E8DC05; border-radius:5px; text-align:center;" ></div>
