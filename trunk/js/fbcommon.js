@@ -62,6 +62,7 @@ function erase_conf(cb) {
 	conf.restore_count = 0;
 	conf.track_id = "" ;
 	conf.freebox_display_popup = true ;
+	conf.use_remote = false;
 }
 
 //--------------  -----------------------------------
@@ -169,7 +170,7 @@ function get_download_config( config, callback )
 }
 function get_session(callback, use_remote)
 {
-	if(typeof(changeUrl)==='undefined') store_conf("use_remote", false);
+	// if(typeof(changeUrl)==='undefined') store_conf("use_remote", false);
 	if (!conf.app_token)
 	{	
 		callback(false);
@@ -182,7 +183,7 @@ function get_session(callback, use_remote)
 	setFBHeader(xhr);
 	xhr.send();
 	var challenge;
-	var retry = 2;
+	//var retry = 2;
 	function onTimeout(){
 		console.log("checkFinished timeout");
 		xhr.abort();
@@ -197,9 +198,9 @@ function get_session(callback, use_remote)
 	if (xhr.readyState != 4) return;
 	if (xhr.status == 0){
 			clearTimeout(timeout);
-			store_conf("use_remote",  !conf.user_remote);
-			if (changeUrl)
-				get_session(callback, false);
+			store_conf("use_remote",  true);
+			if (!use_remote)
+				get_session(callback, true);
 		}  
 		else if (xhr.status == 200){
 			clearTimeout(timeout);
@@ -227,13 +228,11 @@ function get_session(callback, use_remote)
 		var hash = CryptoJS.HmacSHA1(challenge, conf["app_token"]);
 		
 		remove_cookie();
-		xhr.open('POST', buildURL("login/session/"), true);
-		xhr.send('{"app_id": "fr.freebox.domf", "password": "' + hash + '"}');
+		xhr.open('POST', buildURL("login/session/"), false);
 		xhr.onreadystatechange = function () {
 			if (xhr.readyState != 4) return;
 				if (xhr.status == 200){
 					var res = JSON.parse( xhr.responseText );
-					console.log(res);
 					session_token = res.result.session_token;
 					store_conf("session_token", session_token);
 					console.log("New session_token");
@@ -243,19 +242,26 @@ function get_session(callback, use_remote)
 				if (xhr.status == 403){
 					var res = JSON.parse( xhr.responseText );
 					challenge = res.result.challenge;
-					if (retry > 0)
+					/*if (retry > 0)
 					{
 						retry -= 1;
 						remove_cookie();
 						retrieve(challenge, callback);
 					}
 					else
-					{
-						callback(false);
-					}
+					{*/
+						if (conf.use_remote)
+							callback(false);
+						else
+						{
+							store_conf("use_remote",  true);
+							get_session(callback, true);
+						}
 				}  
 				
 		};
+		
+		xhr.send('{"app_id": "fr.freebox.domf", "password": "' + hash + '"}');
 	}
 }
 
