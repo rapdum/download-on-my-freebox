@@ -27,6 +27,7 @@ function check_freebox(ok)
 function check_remote_config(config)
 {
 	var select = document.getElementById("remoteCheck");
+	console.log(config);
 	fb_config = config;
 	
 	store_conf( "remote_ip", config.remote_access_ip );
