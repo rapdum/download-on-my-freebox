@@ -1,0 +1,144 @@
+<html>
+<head><title>Download on my freebox</title></head>
+<script src="js/aes.js"></script>
+<script src="js/hmac-sha1.js"></script>
+<script src="js/base64.js"></script>
+<script src="js/fbcommon.js"></script>
+<script src="js/options.js"></script>
+
+<body >
+<font face="Arial">
+	<center>
+		<table>
+			<tr>
+				<td>
+					<img src="img/down.png"  width="32"/> 
+				</td>
+				<td>
+					<b>Download on my freebox</b>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td width="50%" align="right" style="border-right:solid #AAAAAA; vertical-align:top">
+					<table>
+						<tr>
+							<td align="right">Connexion à la freebox : </td>
+							<td> <img id="Check" name="Check" width="16"/> </td>
+						</tr>
+						<tr>
+							<td align="right">Paramétrage pour l'accès distant : </td>
+							<td> <img id="remoteCheck" name="Check" width="16"/> </td>
+						</tr>
+						<tr>
+							<td align="right">Afficher les popups de notification : </td>
+							<td> <input type="checkbox"  name="display_popup" id="display_popup"> </td>
+						</tr>
+						
+						
+					</table>
+				</td>
+				<td>
+					<div id="register_div" style="display:none;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;"> 
+						Choisissez une des deux solutions suivantes pour authentifier le plugin aupr&egrave;s du Freebox serveur 
+						<p style="border-top: solid 1px black; text-align:center; border-bottom: solid 1px black"> 1 - Demande d'autorisation</p>
+						<ul>
+							<li>Je suis &agrave; la maison. </li>
+							<li>Je n'ai pas encore autentifi&eacute; de plugin aupr&egrave;s du Freebox serveur (Acc&egrave;s en local)</li>
+						</ul>
+						<center>
+							<button id="btn_register" >Demander une autorisation</button>
+						</center>
+						<p style="border-top: solid 1px black; text-align:center; border-bottom: solid 1px black"> 2 - Transfert d'autorisation</p>
+						<ul>
+							<li>J'ai d&eacutej&agrave autentifi&eacute; un plugin.</li>
+							<li>Je veux autentifier un autre plugin en local, ou en acc&egraves distant.</li>
+							<li>J'ai g&eacute;n&eacute;r&eacute; une cl&eacute; de configuration crypt&eacute;e par un mon mot de passe </br>
+								&agrave; partir du premier plugin authentifi&eacute;</i>
+						</ul>
+						<table style="font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;">
+							<tr>
+								<td>
+									Mot de passe :
+								</td>
+								<td>
+									<input type="password" id="remote_password" style="border:solid 1px black; text-align:center;width:100%"/>
+								</td>
+							</tr>
+							<tr>
+								<td style="vertical-align:top;">
+									Cl&eacute; : 
+								</td>
+								<td>
+									<center>
+									<textarea id="remote_key" rows="4" cols="40"></textarea>
+									<button id="btn_register_slave" style="display:block">Enregistrer</button>
+									</center>
+								</td>
+							</tr>
+						</table>								 
+						
+					</div>			
+					<div id="accept_photo" style="display:none;font-size: 12px;">Veuillez accepter la demande sur le Freebox serveur: </br> <img src="img/accept.png" width="100px"/> </div>
+					<div style="display:none;" id="registration_status"> </div>	
+					<table id="ipip" >
+						<tr style=' background-color: #000000;'>
+							<td>
+								<div id="freebox_status" style="display:none;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;"> </div>
+							</td>
+						</tr>
+						<tr style=' background-color: #000000;'>
+							<td>
+								<div id="generate_div" style="display:none;"> 
+									<table style="background-color: #000000; width:100%; color:#E8DC05;font-family: Verdana, Arial, Helvetica, sans-serif;font-size: 10px;">
+										<tr style=' background-color: #E8DC05; color:#000000;'><td colspan='2'> G&eacute;n&eacute;rer une cl&eacute; de configuration crypt&eacute;e pour transf&eacute;rer l'autorisation</td></tr>
+										<tr>
+											<td width="131px">
+												Entrez un mot de passe :
+											</td>
+											<td>
+												<input type="password" id="password" style="border:solid 1px black; border-radius:5px; text-align:center;width:100%"/> 
+											</td>
+										</tr>
+										<tr>
+											<td>
+												Copiez cette cl&eacute; : 
+											</td>
+											<td>
+												<div id="generated_key" style="display:none;width:240px;word-wrap: break-word;border:solid 1px #E8DC05; border-radius:5px; text-align:center;" ></div>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td align="center" colspan="2"></br><button id="btn_erase_all">Reset</button>  </td>
+			</tr>
+		</table>
+		<br>
+
+		<br>
+		<br>
+		<div id="status"/></div>
+		<br>
+		<br>
+		<div id="reasons"/></div>  
+		<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_s-xclick">
+			<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
+			">
+			<input type="image" src="https://www.paypalobjects.com/fr_FR/FR/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - la solution de paiement en ligne la plus simple et la plus sécurisée !">
+			<img alt="" border="0" src="https://www.paypalobjects.com/fr_FR/i/scr/pixel.gif" width="1" height="1">
+		</form>
+	</center>
+
+</font>
+
+
+</body>
+</html>
