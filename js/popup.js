@@ -117,8 +117,8 @@ function buildControl(file, listeners){
 
 function buildInfo(){
 	
-	//var selectseed = document.getElementById("seedbox");
-	//selectseed.href=buildURL("/download.php");
+	var selectseed = document.getElementById("seedbox");
+	selectseed.href="http://" + conf.freebox_url;
 	var listeners = [];
 	if (xhInfo.readyState != 4) 
 			{return;}
@@ -188,6 +188,9 @@ function buildInfo(){
 							active += "(pause)";
 						}
 					}
+					console.log(file.type);
+					if (file.type === "bt")
+					{
 					active +="  -  U: ";
 					if (file.tx_pct >= 10000 )
 					{
@@ -204,12 +207,18 @@ function buildInfo(){
 							active += "(pause)" ;
 						}
 					}
+					}
 					active += "</td>";
 				}
 				active += '<td align="right" width="35">' + buildControl(file, listeners) + '</td>';
 				active += '</tr>';
 				active += '<tr>';
-					active += "<td colspan='5' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div><div class='dl_fond'><div class='dl_bar_up' style='width: "+finished_up+"%;'></div></div></td>";
+					active += "<td colspan='5' class='td_dl_bas'><div class='dl_fond'><div class='dl_bar' style='width: "+finished+"%;'></div></div>";
+					if (file.type === "bt")
+					{
+						active += "<div class='dl_fond'><div class='dl_bar_up' style='width: "+finished_up+"%;'></div></div>"
+					}
+					active += "</td>";
 				active += '</tr>';
 			}
 			if ("done,seeding".indexOf(file.status)>=0)  
