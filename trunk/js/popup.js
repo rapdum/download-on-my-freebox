@@ -129,12 +129,12 @@ function buildInfo(){
 		var activeCount = 0;
 		var downloadCount = 0;
 		var active = "";
-		console.log(res.result);
+		
 		for (i in res.result){
 			var file = res.result[i];
 			
 			if (conf.filter.indexOf(file.status)>=0){
-				//console.log(file);
+			
 				if (file.name.length > size) size = file.name.length;
 				var finished = 0;
 				if (file.size != 0){
@@ -188,7 +188,6 @@ function buildInfo(){
 							active += "(pause)";
 						}
 					}
-					console.log(file.type);
 					if (file.type === "bt")
 					{
 					active +="  -  U: ";
