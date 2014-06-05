@@ -16,27 +16,27 @@
  *
  * Author: Raphaël Dumontier <rdumontier@gmail.com>, (C) 2010, 2011
  */
-
+var notifID = 0;
 function notif(img,title,txt, timeout)
 {
-	if (window.webkitNotifications){
-		var notification = webkitNotifications.createNotification(
-			    chrome.extension.getURL(img),  // icon url - can be relative
-			    title,  // notification title
-			    txt  // notification body text
-				);
-				// Then show the notification.
-		notification.show();
-			//then close it
+	var opt = {
+        type: "basic",
+        title: title,
+        message: txt,
+        iconUrl: img
+      }
+	  
+	 function cb( notificationId) 
+	 {
 		if (timeout!=0){
 		setTimeout(function() {
-    				notification.cancel();
-  					},timeout);
+    				chrome.notifications.clear(notificationId, function cb( notificationId) 
+	 {});
+  					},timeout*1000);
   		}
-  	}
-  	else{
-  		alert(title + ' ' + txt);
-  	}
+	 };
+	notifID += 1;
+	chrome.notifications.create("domf"+notifID, opt, cb);
 }
 
 if (typeof(window.chrome)  !== "undefined"){

@@ -2,7 +2,7 @@
 "update_url":"http://clients2.google.com/service/update2/crx",
   "name": "Download on my freebox",
   "description": "Démarre les téléchargements sur le freebox revolution server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "manifest_version": 2,
   "permissions": ["contextMenus","notifications","cookies","tabs","storage",
   			"http://*/*", "https://*/*"],
