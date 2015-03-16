@@ -38,13 +38,13 @@ function check_remote_config(config)
 	
 	status += "<tr><td>IP : </td><td>" +  config.remote_access_ip + "</td></tr>";
 	status += "<tr><td>Acc&egrave;s distant : </td><td>";
-	status += config.remote_access ? "Authoris&eacute;" : "Interdit";
+	status += config.remote_access ? "Autoris&eacute;" : "Interdit";
 	status += "</td></tr>";
 	status += "<tr><td>Mot de passe : </td><td>";
 	status += config.is_secure_pass ? "S&eacute;curis&eacute;" : "Ne respecte pas les regles pour l'acces distant";
 	status += "</td></tr>";
 	status += "<tr><td>Utilisation des api : </td><td>";
-	status += config.api_remote_access ? "Authoris&eacute;" : "Interdit";
+	status += config.api_remote_access ? "Autoris&eacute;" : "Interdit";
 	status += "</td></tr>";
 	status += "<tr><td>URL distant : </td><td>" + config.remote_access_ip + ":"+config.remote_access_port + "</td></tr>";
 	

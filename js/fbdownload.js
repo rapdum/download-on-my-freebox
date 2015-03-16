@@ -62,12 +62,22 @@ function getFilename(url)
 
 function download(url){
 
-  	// todo : check if we are correctly log we need a cookie to send download request
-	
-		if( url.substr(0,7) == "magnet:")
-			downloadFile(url);
+  	function cb(res){
+		if (res.result == false){
+			console.log("login failed");
+		}
 		else
-			dispatchDownload(url);
+		{
+			remove_cookie();
+			if( url.substr(0,7) == "magnet:")
+				downloadFile(url);
+			else
+				dispatchDownload(url);
+		}
+		
+	}	
+
+	get_session(cb);	
 	
 }
 
